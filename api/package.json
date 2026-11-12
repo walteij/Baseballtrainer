@@ -1,0 +1,28 @@
+{
+  "name": "honkbal-trainer-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/api/src/functions/*.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "start": "func start",
+    "test": "vitest run",
+    "lint": "eslint src tests",
+    "catalog:import": "node scripts/import-catalog.mjs"
+  },
+  "dependencies": {
+    "@azure/cosmos": "^4.3.0",
+    "@azure/functions": "^4.7.2",
+    "@azure/identity": "^4.5.0",
+    "jose": "^5.10.0",
+    "pino": "^9.6.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.7.0",
+    "vitest": "^5.1.0"
+  }
+}

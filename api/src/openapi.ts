@@ -21,6 +21,21 @@ const schemas: Record<string, object> = {
   CurriculumSkill: obj({ id: str, name: str, description: str, level: { type: 'integer', minimum: 1, maximum: 10 }, progression: str }),
   CurriculumGoal: obj({ id: uuid, text: str, skill_ids: sources }, ['text', 'skill_ids']),
   Curriculum: obj({ age_group_id: age, version, goals: array(ref('CurriculumGoal')), skills: array(ref('CurriculumSkill')) }),
+  DevelopmentModel: {
+    ...obj({
+      schemaVersion: str, ageGroups: array({ type: 'object' }), taxonomy: array({ type: 'object' }),
+      skillGoals: array({ type: 'object' }), clubGoals: array({ type: 'object' }),
+    }),
+    description: 'Complete development model; validated against the shared development schema and reference integrity rules.',
+  },
+  DevelopmentVersion: obj({ version, model: ref('DevelopmentModel'), savedAt: { type: 'string', format: 'date-time' }, savedBy: uuid }),
+  DevelopmentAssignment: obj({
+    id: str, teamId: uuid, seasonId: uuid, ageGroupId: str,
+    goalType: { type: 'string', enum: ['skill_goal', 'club_goal'] }, goalId: str, active: { type: 'boolean' },
+    priority: { type: 'integer', minimum: 1, maximum: 5 }, coachNote: str,
+    overrides: obj({ name: str, description: str, masteryTargetPercentage: { type: 'number', minimum: 0, maximum: 100 } }, []),
+  }, ['id', 'teamId', 'seasonId', 'ageGroupId', 'goalType', 'goalId', 'active', 'priority']),
+  DevelopmentAssignments: obj({ teamId: uuid, seasonId: uuid, version, modelVersion: version, assignments: array(ref('DevelopmentAssignment')), savedAt: { type: 'string', format: 'date-time' }, savedBy: uuid }),
   ComposedGoal: obj({ id: uuid, text: str, source: { type: 'string', enum: ['generiek', 'team'] }, generic_goal_version: version, season_id: uuid, team_id: uuid, skill_ids: sources }, ['id', 'text', 'source', 'season_id', 'team_id', 'skill_ids']),
   GoalComposition: obj({ id: str, team_id: uuid, season_id: uuid, age_group_goal_version: version, goals: array(ref('ComposedGoal')), selected_generic_goal_ids: array(uuid), team_goal_ids: array(uuid), created_at: str }),
   Drill: obj({
@@ -66,6 +81,14 @@ export const openapi = {
     '/age-groups/{ageGroupId}/curriculum': {
       get: operation('Get current club curriculum', obj({ curriculum: { ...ref('Curriculum'), nullable: true } }), 200, { params: [pathId('ageGroupId')] }),
       put: operation('Publish club curriculum (Committee only)', obj({ curriculum: ref('Curriculum') }), 200, { params: [pathId('ageGroupId')], body: obj({ expectedVersion: { type: 'integer', minimum: 0 }, goals: array(ref('CurriculumGoal')), skills: array(ref('CurriculumSkill')) }), errors: [400, 409, 422, 500] }),
+    },
+    '/development-model': {
+      get: operation('Get a development model version', obj({ development: { ...ref('DevelopmentVersion'), nullable: true } }), 200, { params: [param('version', version, 'query', false)] }),
+      put: operation('Save a new development model version (Committee only)', obj({ development: ref('DevelopmentVersion') }), 200, { body: obj({ expectedVersion: { type: 'integer', minimum: 0 }, model: ref('DevelopmentModel') }), errors: [400, 409, 422, 500] }),
+    },
+    '/teams/{teamId}/seasons/{seasonId}/development-goals': {
+      get: operation('Get team development goals', obj({ developmentAssignments: { ...ref('DevelopmentAssignments'), nullable: true } }), 200, { params: [pathId('teamId'), pathId('seasonId')], errors: [404, 422, 500] }),
+      put: operation('Save team development goals (assigned trainer or Committee)', obj({ developmentAssignments: ref('DevelopmentAssignments') }), 200, { params: [pathId('teamId'), pathId('seasonId')], body: obj({ expectedVersion: { type: 'integer', minimum: 0 }, modelVersion: version, assignments: array(ref('DevelopmentAssignment')) }), errors: [400, 404, 409, 422, 500] }),
     },
     '/teams/{id}/skill-progress': { get: operation('Team progress', obj({ skillProgress: array(ref('TeamSkillProgress')) }), 200, { params: [pathId('id')], errors: [404, 422, 500] }) },
     '/teams/{id}/skill-progress/{skillId}': { put: operation('Update team progress', obj({ skillProgress: ref('TeamSkillProgress') }), 200, { params: [pathId('id'), pathId('skillId')], body: progressInput, errors: [400, 404, 422, 500] }) },

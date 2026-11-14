@@ -49,6 +49,13 @@ export class ProgramService implements IProgramService {
         minutes += duration; remaining -= duration; lastUsed.set(d.id, index * 7);
         if (remaining <= 0) break;
       }
+      if (remaining > 0) {
+        const sessionDate = date.toISOString().slice(0, 10);
+        throw new ValidationError(
+          `Geen volledig seizoensplan mogelijk: de training op ${sessionDate} mist ${remaining} minuten. Controleer het materiaal, de beschikbare ruimte en de leerlijn; er moeten voldoende oefeningen zijn die aan de herhaaltermijnen voldoen. Er is niets opgeslagen.`,
+          { date: sessionDate, requestedMinutes: settings.duration, plannedMinutes: settings.duration - remaining, missingMinutes: remaining },
+        );
+      }
       return { id: randomUUID(), team_id: teamId, program_id: program.id, title: `${settings.phase} #${index + 1}`, date: date.toISOString().slice(0, 10), time: settings.time, end: format(Number(settings.time.slice(0, 2)) * 60 + Number(settings.time.slice(3)) + settings.duration), phase: settings.phase, location: settings.location, focus: blocks.slice(1).map(b => b.detail).join(' · '), blocks, completed: false, completed_items: [], equipment: settings.equipment };
     });
     await this.repo.batch(TEAM, teamId, [

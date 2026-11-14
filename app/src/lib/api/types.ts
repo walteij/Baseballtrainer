@@ -1,3 +1,7 @@
+import type { DevelopmentModel } from '../../../../shared/schemas/development.js';
+import type { DevelopmentAssignment, SaveDevelopmentAssignments } from '../../../../shared/schemas/developmentAssignment.js';
+
+export type { DevelopmentModel, DevelopmentAssignment, SaveDevelopmentAssignments };
 export type AgeGroup = 'Beeball' | 'U12' | 'U15' | 'U21' | 'Senioren';
 export interface Team { id: string; name: string; age_group_id: AgeGroup }
 export interface Drill {
@@ -22,6 +26,11 @@ export interface TeamSeason { id: string; team_id: string; year: number; age_gro
 export interface CurriculumSkill { id: string; name: string; description: string; level: number; progression: string }
 export interface CurriculumGoal { id?: string; text: string; skill_ids: string[] }
 export interface Curriculum { age_group_id: AgeGroup; version: number; goals: CurriculumGoal[]; skills: CurriculumSkill[] }
+export interface DevelopmentVersion { version: number; model: DevelopmentModel; savedAt: string; savedBy: string }
+export interface DevelopmentAssignments {
+  teamId: string; seasonId: string; version: number; modelVersion: number;
+  assignments: DevelopmentAssignment[]; savedAt: string; savedBy: string;
+}
 export interface ApiClient {
   health(): Promise<{ status: string; services: string[] }>;
   getCatalog(): Promise<Catalog>;
@@ -50,4 +59,8 @@ export interface ApiClient {
   unassignTrainer(teamId: string, objectId: string): Promise<void>;
   getCurriculum(ageGroup: AgeGroup): Promise<Curriculum | null>;
   saveCurriculum(ageGroup: AgeGroup, input: { expectedVersion: number; goals: CurriculumGoal[]; skills: CurriculumSkill[] }): Promise<Curriculum>;
+  getDevelopment(version?: number): Promise<DevelopmentVersion | null>;
+  saveDevelopment(expectedVersion: number, model: DevelopmentModel): Promise<DevelopmentVersion>;
+  getDevelopmentAssignments(teamId: string, seasonId: string): Promise<DevelopmentAssignments | null>;
+  saveDevelopmentAssignments(teamId: string, seasonId: string, input: SaveDevelopmentAssignments): Promise<DevelopmentAssignments>;
 }

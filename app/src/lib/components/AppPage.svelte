@@ -9,6 +9,10 @@
   import { downloadIcal, sessionSummary, whatsapp } from '$lib/services/share';
   import Status from './Status.svelte';
   import CurriculumEditor from './CurriculumEditor.svelte';
+  import DevelopmentEditor from './DevelopmentEditor.svelte';
+  import DevelopmentTeamGoals from './DevelopmentTeamGoals.svelte';
+  import TrainerManager from './TrainerManager.svelte';
+  import CommitteeManager from './CommitteeManager.svelte';
   import { Activity, ArrowLeft, ArrowRight, CalendarDays, CheckCircle2, Clock3, Copy, Download, Dumbbell, LayoutGrid, ListChecks, MapPin, Play, Search, Send, Settings as SettingsIcon, Shield, Target, TrendingUp } from 'lucide-svelte';
 
   let state: 'loading' | 'error' | 'data' = 'loading';
@@ -24,16 +28,15 @@
   let currentSeason = '';
   let goalVersion = 0;
   let assignments: { objectId: string }[] = [];
-  let trainerId = '';
   let progressions: string[] = [];
-  let loadedTeam = '';
+  let loadedTeam: string | undefined;
+  let loadedView = '';
   let generation = 0;
   let search = '';
   let category = 'alle';
   let sort = 'naam';
   let phase = 'Alle fases';
   let calendarTab = 'Lijst';
-  let adminTab = 'Teams en doelen';
   let video = false;
   let message = '';
   let checked: string[] = [];
@@ -45,7 +48,12 @@
   let skillFilter = 'alle';
   let selectedGeneric: string[] = [];
   let draftGoals: Goal[] = [];
+  const equipmentLabels: Record<string, string> = { balls: 'ballen', gloves: 'handschoenen' };
   $: pathname = $page.url.pathname;
+  $: management = pathname === '/beheer' || pathname.startsWith('/beheer/');
+  $: skillsManagement = pathname === '/beheer/skills' || pathname === '/beheer/skills/';
+  $: viewKey = management ? (skillsManagement ? 'beheer-skills' : 'beheer-users') : pathname;
+  $: if (loadedTeam !== undefined && loadedView !== viewKey) void load();
   $: id = decodeURIComponent(pathname.split('/').filter(Boolean).at(-1) ?? '');
   $: admin = $identity?.isCommittee ?? false;
   $: suffix = '';
@@ -64,22 +72,25 @@
   $: checklistKey = `warming-up:${$activeTeam}:${warmupSession}`;
 
   async function load(teamId = $activeTeam) {
-    const request = ++generation; state = 'loading'; error = ''; message = '';
+    const request = ++generation; loadedView = viewKey; state = 'loading'; error = ''; message = '';
     try {
       const allTeams = await api.listTeams();
+      if (request !== generation) return;
       if (!allTeams.length) {
-        teams = []; catalog = null; sessions = []; seasons = []; assignments = []; loadedTeam = teamId; state = 'data'; return;
+        const allCatalog = pathname === '/drills' || pathname.startsWith('/drills/') ? await api.getCatalog() : null;
+        if (request !== generation) return;
+        teams = []; catalog = allCatalog; sessions = []; seasons = []; assignments = []; loadedTeam = teamId; state = 'data'; return;
       }
       if (!allTeams.some(item => item.id === teamId)) { activeTeam.set(allTeams[0].id); return; }
       const [allCatalog, teamSessions, teamSettings, allSeasons] = await Promise.all([
-        pathname === '/beheer' ? Promise.resolve(null) : api.getCatalog(),
-        pathname === '/beheer' ? Promise.resolve([]) : api.listTeamSessions(teamId),
+        management ? Promise.resolve(null) : api.getCatalog(),
+        management ? Promise.resolve([]) : api.listTeamSessions(teamId),
         api.getSettings(teamId), api.listTeamSeasons(teamId),
       ]);
       const current = allTeams.find((item) => item.id === teamId);
       const chosenSeason = allSeasons.find(s => s.id === currentSeason) ?? [...allSeasons].sort((a, b) => b.year - a.year)[0];
       const [teamSkills, progression, composition, generic, teamAssignments] = current
-        ? await Promise.all([pathname === '/beheer' ? [] : api.getTeamSkillProgress(teamId), pathname === '/beheer' ? { skills: [], progressions: [] } : api.getSkillProgression(current.age_group_id), chosenSeason ? api.getTeamSeasonGoals(teamId, chosenSeason.id) : null, api.getAgeGroupGoals(chosenSeason?.age_group_id ?? current.age_group_id), admin ? api.listAssignments(teamId) : []])
+        ? await Promise.all([management ? [] : api.getTeamSkillProgress(teamId), management ? { skills: [], progressions: [] } : api.getSkillProgression(current.age_group_id), management && !skillsManagement ? null : chosenSeason ? api.getTeamSeasonGoals(teamId, chosenSeason.id) : null, management && !skillsManagement ? null : api.getAgeGroupGoals(chosenSeason?.age_group_id ?? current.age_group_id), admin && (!management || !skillsManagement) ? api.listAssignments(teamId) : []])
         : [[], { skills: [], progressions: [] }, null, null, []];
       if (request !== generation) return;
       teams = allTeams; catalog = allCatalog; sessions = teamSessions; settings = teamSettings; skills = teamSkills;
@@ -146,14 +157,6 @@
   function addGoal() {
     if (newGoal.trim()) { draftGoals = [...draftGoals, { id: `draft-${crypto.randomUUID()}`, text: newGoal.trim(), source: 'team', skill_ids: [] }]; newGoal = ''; }
   }
-  async function changeAssignment(removeId?: string) {
-    try {
-      if (removeId) await api.unassignTrainer($activeTeam, removeId);
-      else { await api.assignTrainer($activeTeam, trainerId.trim()); trainerId = ''; }
-      assignments = await api.listAssignments($activeTeam);
-      message = removeId ? 'Trainerkoppeling verwijderd.' : 'Trainer gekoppeld aan dit team.';
-    } catch (e) { message = e instanceof Error ? e.message : 'Trainerkoppeling wijzigen mislukt.'; }
-  }
   onMount(() => {
     const unsubscribe = activeTeam.subscribe((value) => { if (value !== loadedTeam) void load(value); });
     return unsubscribe;
@@ -162,7 +165,7 @@
 
 {#if state === 'loading'}<Status state="loading" />
 {:else if state === 'error'}<Status state="error" message={error} retry={() => load()} />
-{:else if !teams.length && pathname !== '/beheer'}<Status state="empty" message="Er zijn nog geen teams beschikbaar. Een TC-lid kan een team aanmaken bij Beheer." />
+{:else if !teams.length && !management && pathname !== '/drills' && !pathname.startsWith('/drills/')}<Status state="empty" message="Er zijn nog geen teams beschikbaar. Een TC-lid kan een team aanmaken bij Beheer." />
 {:else if pathname === '/'}
   {#if !nextSession}<Status state="empty" message="Voor dit team staan nog geen trainingen gepland." />
   {:else}
@@ -209,7 +212,7 @@
   {#if !drill}<Status state="empty" message="Deze drill bestaat niet in de catalogus." />
   {:else}
   <a class="back" href="/drills{suffix}"><ArrowLeft size={16}/> Terug naar catalogus</a><div class="page-title"><div><span class="eyebrow">DRILLDETAIL · {drill.category.toUpperCase()}</span><h1>{drill.name_nl}</h1><p>{drill.category} · {drill.subcategories.join(', ')} · {drill.difficulty} · {drill.duration_minutes.minimum}–{drill.duration_minutes.maximum} min · {drill.players_min}–{drill.players_max} spelers · {drill.indoor_friendly ? 'indoor-geschikt' : 'buiten'}</p></div><span class="badge">{drill.category}</span></div>
-  <div class="two-col"><div class="stack"><article class="card"><h2><Play size={18}/> Video</h2>{#if drill.youtube}{#if video}<iframe class="video" title={drill.youtube.title} src="https://www.youtube-nocookie.com/embed/{new URL(drill.youtube.url).searchParams.get('v')}?start={drill.youtube.start_seconds}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>{:else}<button class="video-button" onclick={() => video = true}><Play size={32}/><strong>Klik om video te laden</strong><span>YouTube · externe inhoud</span></button>{/if}{:else}<p>Voor deze drill is geen video beschikbaar.</p>{/if}</article><article class="card"><h2><MapPin size={18}/> Setup</h2><ul>{#each drill.setup as line}<li>{line}</li>{/each}</ul></article><article class="card"><h2><ListChecks size={18}/> Uitvoering</h2><ol>{#each drill.execution as line}<li>{line}</li>{/each}</ol></article></div><div class="stack">{#each [{title: 'Coachingpunten', lines: drill.coaching_points}, {title: 'Veelgemaakte fouten', lines: drill.common_mistakes}, {title: 'Veiligheid', lines: drill.safety_notes}, {title: 'Variaties', lines: drill.variations.map((v) => `${v.name} (${v.difficulty}) — ${v.description}`)}] as section}<article class="card"><h2><Target size={18}/> {section.title}</h2><ul>{#each section.lines as line}<li>{line}</li>{/each}</ul></article>{/each}<article class="card"><h2><Dumbbell size={18}/> Materiaal</h2><p>Verplicht: {drill.equipment_required.join(', ')} · Optioneel: {drill.equipment_optional.join(', ')}</p></article></div></div>
+  <div class="two-col"><div class="stack"><article class="card"><h2><Play size={18}/> Video</h2>{#if drill.youtube}{#if video}<iframe class="video" title={drill.youtube.title} src="https://www.youtube-nocookie.com/embed/{new URL(drill.youtube.url).searchParams.get('v')}?start={drill.youtube.start_seconds}" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>{:else}<button class="video-button" onclick={() => video = true}><Play size={32}/><strong>Klik om video te laden</strong><span>YouTube · externe inhoud</span></button>{/if}<p><a href={drill.youtube.url} target="_blank" rel="noopener noreferrer">Open video op YouTube</a> als afspelen hier niet lukt.</p>{:else}<p>Voor deze drill is geen video beschikbaar.</p>{/if}</article><article class="card"><h2><MapPin size={18}/> Setup</h2><ul>{#each drill.setup as line}<li>{line}</li>{/each}</ul></article><article class="card"><h2><ListChecks size={18}/> Uitvoering</h2><ol>{#each drill.execution as line}<li>{line}</li>{/each}</ol></article></div><div class="stack">{#each [{title: 'Coachingpunten', lines: drill.coaching_points}, {title: 'Veelgemaakte fouten', lines: drill.common_mistakes}, {title: 'Veiligheid', lines: drill.safety_notes}, {title: 'Variaties', lines: drill.variations.map((v) => `${v.name} (${v.difficulty}) — ${v.description}`)}] as section}<article class="card"><h2><Target size={18}/> {section.title}</h2><ul>{#each section.lines as line}<li>{line}</li>{/each}</ul></article>{/each}<article class="card"><h2><Dumbbell size={18}/> Materiaal</h2><p>Verplicht: {drill.equipment_required.join(', ')} · Optioneel: {drill.equipment_optional.join(', ')}</p></article></div></div>
   <article class="card"><h2><TrendingUp size={18}/> Skillkoppeling</h2><p>{drill.skills.join(' · ')} · Catalogustags. Categorie- en niveaukoppelingen zijn configureerbaar; bij een overgang blijft de skillhistorie behouden.</p></article>
   {/if}
 {:else if pathname === '/warming-up'}
@@ -220,23 +223,40 @@
   <form class="stack" onsubmit={(e) => { e.preventDefault(); void saveSettings(); }}>
     <section class="card"><h2>Teamprofiel</h2><div class="form-grid"><label>Teamnaam<input value={team?.name ?? ''} disabled /></label><label>Leeftijdscategorie<input value={team?.age_group_id ?? ''} disabled /></label></div><p class="hint">Kies een ander team bovenaan. Skillhistorie blijft behouden bij een overgang.</p></section>
     <section class="card"><h2><CalendarDays size={18}/> Planning</h2><div class="form-grid"><label>Startdatum<input type="date" bind:value={settings.startDate} required /></label><label>Trainingsdag<select bind:value={settings.day}>{#each ['maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag','zondag'] as day}<option>{day}</option>{/each}</select></label><label>Starttijd<input type="time" bind:value={settings.time} required /></label><label>Duur per training (minuten)<input type="number" min="60" max="180" step="15" bind:value={settings.duration} required /></label><label>Seizoensfase<select bind:value={settings.phase}>{#each ['Winter','Preseason','Competitie','Postseason'] as f}<option>{f}</option>{/each}</select></label></div></section>
-    <section class="card"><h2><MapPin size={18}/> Ruimte & materiaal</h2><div class="form-grid"><label>Locatie<select bind:value={settings.location}><option>zaal — laag plafond</option><option>zaal — hoog plafond</option><option>buitenveld</option></select></label></div><p>Beschikbaarheid</p><div class="check-row"><label><input type="checkbox" bind:checked={settings.field}/> Veld</label><label><input type="checkbox" bind:checked={settings.cage}/> Slagkooi</label><label><input type="checkbox" bind:checked={settings.mound}/> Mound</label></div><p>Materiaal</p><div class="check-row">{#each ['bat','ballen','net','tee','cones','banden','L-scherm','wiffle balls'] as equipment}<label><input type="checkbox" value={equipment} bind:group={settings.equipment}/> {equipment}</label>{/each}</div></section>
+    <section class="card"><h2><MapPin size={18}/> Ruimte & materiaal</h2><div class="form-grid"><label>Locatie<select bind:value={settings.location}><option>zaal — laag plafond</option><option>zaal — hoog plafond</option><option>buitenveld</option></select></label></div><p>Beschikbaarheid</p><div class="check-row"><label><input type="checkbox" bind:checked={settings.field}/> Veld</label><label><input type="checkbox" bind:checked={settings.cage}/> Slagkooi</label><label><input type="checkbox" bind:checked={settings.mound}/> Mound</label></div><p>Materiaal</p><div class="check-row">{#each ['bat','balls','gloves','net','tee','cones','banden','L-scherm','wiffle balls'] as equipment}<label><input type="checkbox" value={equipment} bind:group={settings.equipment}/> {equipmentLabels[equipment] ?? equipment}</label>{/each}</div></section>
     <p class="hint">Instellingen worden lokaal op dit apparaat bewaard. Voer geen persoonsgegevens van jeugdspelers in.</p><div class="action-bar"><button class="btn secondary" type="submit">Bewaar instellingen</button><button class="btn primary" type="button" onclick={generate}><CalendarDays size={16}/> Genereer seizoensplan</button></div>
   </form>
-{:else if pathname === '/beheer'}
-  <div class="page-title"><div><span class="eyebrow">CLUB & SEIZOEN</span><h1><Shield size={25}/> Beheer</h1><p>Teams, trainers en doelen</p></div></div>
-  {#if admin}
-    <CurriculumEditor />
+{:else if management}
+  <div class="page-title"><div><span class="eyebrow">CLUB & SEIZOEN</span><h1><Shield size={25}/> Beheer · {skillsManagement ? 'Skills' : 'Users'}</h1><p>{skillsManagement ? 'Vaardigheden en doelen' : 'Teams en gebruikers'}</p></div></div>
+  <nav class="tabs" aria-label="Beheeronderdelen">
+    <a href="/beheer/users" aria-current={!skillsManagement ? 'page' : undefined}>Users</a>
+    <a href="/beheer/skills" aria-current={skillsManagement ? 'page' : undefined}>Skills</a>
+  </nav>
+  {#if !skillsManagement}
+    {#if admin}
+    <CommitteeManager />
     <section class="card"><h2>Team voor seizoen aanmaken</h2><div class="form-grid"><label>Teamnaam<input bind:value={newTeamName} /></label><label>Seizoenjaar<input type="number" bind:value={newYear} min="2000" max="2200"/></label><label>Leeftijdsgroep<select bind:value={newAge}>{#each ['Beeball', 'U12', 'U15', 'U21', 'Senioren'] as age}<option value={age}>{age}</option>{/each}</select></label></div><div class="action-bar"><button class="btn primary" onclick={createSeason}>Maak team voor seizoen</button></div></section>
-    {#if team}<section class="card"><h2>Trainers koppelen · {team.name}</h2><p>Gebruik het object-id van de gebruiker in deze tenant. De gebruiker moet ook de Trainer-rol hebben in Entra.</p><div class="inline-form"><label>Entra object-id<input bind:value={trainerId} placeholder="00000000-0000-0000-0000-000000000000" /></label><button class="btn secondary" onclick={() => changeAssignment()}>Koppel trainer</button></div><ul>{#each assignments as assignment}<li>{assignment.objectId} <button class="link-button" onclick={() => changeAssignment(assignment.objectId)}>Verwijderen</button></li>{/each}</ul>{#if !assignments.length}<p>Geen trainers gekoppeld.</p>{/if}</section>{/if}
-  {/if}
-  {#if team}<section class="card"><h2><Target size={18}/> Doelen samenstellen · {team.name}</h2>
+    {#if team}{#key team.id}<TrainerManager teamId={team.id} teamName={team.name} {assignments} />{/key}{/if}
+    {:else}<p>Gebruikers- en teambeheer is beschikbaar voor de TC.</p>{/if}
+  {:else}
+    {#if admin}
+      <CurriculumEditor />
+      <DevelopmentEditor />
+    {/if}
+    {#if team}<section class="card"><h2><Target size={18}/> Doelen samenstellen · {team.name}</h2>
     <label>Seizoen<select bind:value={currentSeason} onchange={() => load()}>{#if !seasons.length}<option value="">Geen seizoenen beschikbaar</option>{/if}{#each seasons as season}<option value={season.id}>{season.year} · {season.age_group_id}</option>{/each}</select></label>
     <p>Generieke doelen · {team.age_group_id} · {goalVersion ? `versie ${goalVersion}` : 'niet beschikbaar'}</p>
     {#if genericGoals.length}<div class="check-list">{#each genericGoals as goal}<label><input type="checkbox" value={goal.id} bind:group={selectedGeneric}/> {goal.text}</label>{/each}</div>
     <h3>Teamspecifieke doelen</h3><ul>{#each draftGoals as goal}<li>{goal.text} <button class="link-button" onclick={() => draftGoals = draftGoals.filter(item => item.id !== goal.id)}>Verwijderen</button></li>{/each}</ul>
     <div class="inline-form"><label>Nieuw teamdoel<input bind:value={newGoal} placeholder="Beschrijf een teamdoel" /></label><button class="btn secondary" onclick={addGoal}>Voeg teamdoel toe</button></div><p>Samengesteld: {selectedGeneric.length + draftGoals.length} doelen.</p><div class="action-bar"><button class="btn primary" disabled={!currentSeason} onclick={saveGoals}>Bewaar doelen voor seizoen</button></div>
     {:else}<p>Er zijn nog geen generieke doelen beschikbaar voor deze leeftijdsgroep.</p>{/if}
-  </section>{:else}<p>Maak eerst een team aan.</p>{/if}
+  </section>
+  {#if currentSeason}
+    {#key `${team.id}:${currentSeason}`}
+      <DevelopmentTeamGoals teamId={team.id} seasonId={currentSeason} ageGroup={seasons.find(item => item.id === currentSeason)?.age_group_id ?? team.age_group_id} />
+    {/key}
+  {/if}
+    {:else}<p>Maak eerst een team aan.</p>{/if}
+  {/if}
 {/if}
 {#if message}<aside class="alert" role="status">{message}<button class="link-button" onclick={() => message = ''}>Sluiten</button></aside>{/if}

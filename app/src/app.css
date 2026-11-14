@@ -87,8 +87,8 @@ li + li { margin-top: .35rem; }
 .page-title h1 { margin-top: 6px; }
 .page-title p { margin-top: 7px; }
 .tabs { display: flex; gap: 6px; overflow-x: auto; border-bottom: 1px solid var(--border); }
-.tabs button { background: transparent; color: var(--muted); border: 0; border-bottom: 2px solid transparent; padding: 12px 16px; white-space: nowrap; font-weight: 600; }
-.tabs button.chosen { color: var(--text); border-color: var(--accent); }
+.tabs button, .tabs a { background: transparent; color: var(--muted); border: 0; border-bottom: 2px solid transparent; padding: 12px 16px; white-space: nowrap; font-weight: 600; }
+.tabs button.chosen, .tabs a[aria-current="page"] { color: var(--text); border-color: var(--accent); }
 .chip { border: 1px solid var(--border); border-radius: 999px; background: var(--raised); color: var(--muted); padding: 7px 12px; font-size: 12px; font-weight: 600; }
 .chip.chosen { background: var(--text); color: var(--raised); border-color: var(--text); }
 .table-wrap { overflow-x: auto; padding: 0; }

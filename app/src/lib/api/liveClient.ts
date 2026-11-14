@@ -1,5 +1,5 @@
 import { accessToken } from '$lib/auth';
-import type { AgeGroup, ApiClient, Catalog, Curriculum, Goal, Program, Session, Settings, Skill, Team, TeamSeason } from './types';
+import type { AgeGroup, ApiClient, Catalog, Curriculum, DevelopmentAssignments, DevelopmentVersion, Goal, Program, Session, Settings, Skill, Team, TeamSeason } from './types';
 
 class ApiError extends Error {
   constructor(public readonly status: number, message: string) { super(message); }
@@ -29,9 +29,14 @@ async function request<T>(path: string, method = 'GET', data?: unknown): Promise
     if (response.status === 422 && response.headers.get('content-type')?.includes('application/json')) {
       const payload: unknown = await response.json();
       if (typeof payload === 'object' && payload !== null && 'error' in payload &&
-          typeof payload.error === 'object' && payload.error !== null && 'code' in payload.error &&
-          payload.error.code === 'MISSING_PROGRESSION') {
-        throw new ApiError(422, 'Voor deze leeftijdscategorie is nog geen vaardighedenleerlijn ingesteld. Vraag de TC om deze vast te stellen.');
+          typeof payload.error === 'object' && payload.error !== null && 'code' in payload.error) {
+        if (payload.error.code === 'MISSING_PROGRESSION') {
+          throw new ApiError(422, 'Voor deze leeftijdscategorie is nog geen vaardighedenleerlijn ingesteld. Vraag de TC om deze vast te stellen.');
+        }
+        if (payload.error.code === 'VALIDATION_ERROR' && 'message' in payload.error &&
+            typeof payload.error.message === 'string' && payload.error.message.trim()) {
+          throw new ApiError(422, payload.error.message);
+        }
       }
     }
     throw new ApiError(response.status, `De API gaf een fout (${response.status}).`);
@@ -44,6 +49,10 @@ type ApiSession = Omit<Session, 'blocks'> & { blocks: Array<Omit<Session['blocks
 const session = (value: ApiSession): Session => ({ ...value, blocks: value.blocks.map(({ drill_id, ...block }) => ({ ...block, drillId: drill_id })) });
 type ApiGoal = { id: string; text: string; skill_ids: string[]; source?: 'generiek' | 'team'; generic_goal_version?: number; version?: number };
 const goal = (value: ApiGoal): Goal => ({ id: value.id, text: value.text, skill_ids: value.skill_ids, source: value.source ?? 'generiek', version: value.generic_goal_version ?? value.version });
+const catalogSettings = (settings: Settings): Settings => ({
+  ...settings,
+  equipment: [...new Set(settings.equipment.map(item => item === 'ballen' ? 'balls' : item))],
+});
 
 export const liveClient: ApiClient = {
   health: async () => {
@@ -58,7 +67,7 @@ export const liveClient: ApiClient = {
   listTeamSeasons: async teamId => (await request<{ seasons: TeamSeason[] }>(`/teams/${segment(teamId)}/seasons`)).seasons,
   listTeamSessions: async teamId => (await request<{ sessions: ApiSession[] }>(`/teams/${segment(teamId)}/sessions`)).sessions.map(session),
   createProgram: async (teamId, settings) => {
-    const result = await request<{ program: Program; sessions: ApiSession[] }>('/programs', 'POST', { team_id: teamId, settings });
+    const result = await request<{ program: Program; sessions: ApiSession[] }>('/programs', 'POST', { team_id: teamId, settings: catalogSettings(settings) });
     return { program: result.program, sessions: result.sessions.map(session) };
   },
   getProgram: async id => {
@@ -115,13 +124,17 @@ export const liveClient: ApiClient = {
   },
   getSettings: async teamId => {
     const saved = localStorage.getItem(`settings:${teamId}`);
-    if (saved) return JSON.parse(saved) as Settings;
+    if (saved) return catalogSettings(JSON.parse(saved) as Settings);
     return { startDate: new Date().toISOString().slice(0, 10), day: 'dinsdag', time: '19:00', duration: 90, phase: 'Winter', location: 'zaal — laag plafond', equipment: [], field: false, cage: false, mound: false };
   },
   saveSettings: async (teamId, settings) => { localStorage.setItem(`settings:${teamId}`, JSON.stringify(settings)); return settings; },
   getIdentity: () => request('/me'),
   getCurriculum: async ageGroup => (await request<{ curriculum: Curriculum | null }>(`/age-groups/${segment(ageGroup)}/curriculum`)).curriculum,
   saveCurriculum: async (ageGroup, input) => (await request<{ curriculum: Curriculum }>(`/age-groups/${segment(ageGroup)}/curriculum`, 'PUT', input)).curriculum,
+  getDevelopment: async version => (await request<{ development: DevelopmentVersion | null }>(`/development-model${version ? `?version=${version}` : ''}`)).development,
+  saveDevelopment: async (expectedVersion, model) => (await request<{ development: DevelopmentVersion }>('/development-model', 'PUT', { expectedVersion, model })).development,
+  getDevelopmentAssignments: async (teamId, seasonId) => (await request<{ developmentAssignments: DevelopmentAssignments | null }>(`/teams/${segment(teamId)}/seasons/${segment(seasonId)}/development-goals`)).developmentAssignments,
+  saveDevelopmentAssignments: async (teamId, seasonId, input) => (await request<{ developmentAssignments: DevelopmentAssignments }>(`/teams/${segment(teamId)}/seasons/${segment(seasonId)}/development-goals`, 'PUT', input)).developmentAssignments,
   listAssignments: async teamId => (await request<{ assignments: { objectId: string }[] }>(`/teams/${segment(teamId)}/trainers`)).assignments,
   assignTrainer: async (teamId, objectId) => { await request<void>(`/teams/${segment(teamId)}/trainers/${segment(objectId)}`, 'PUT'); },
   unassignTrainer: async (teamId, objectId) => { await request<void>(`/teams/${segment(teamId)}/trainers/${segment(objectId)}`, 'DELETE'); },

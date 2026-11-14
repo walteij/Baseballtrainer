@@ -50,6 +50,24 @@ export async function accessToken(): Promise<string> {
   }
 }
 
+export async function trainerAdministrationToken(): Promise<string> {
+  if (!client || !account) throw new Error('Meld je eerst aan met je Microsoft-account.');
+  const scopes = [
+    'https://graph.microsoft.com/User.Read.All',
+    'https://graph.microsoft.com/User.Invite.All',
+    'https://graph.microsoft.com/Application.Read.All',
+    'https://graph.microsoft.com/AppRoleAssignment.ReadWrite.All',
+  ];
+  try {
+    return (await client.acquireTokenSilent({ account, scopes })).accessToken;
+  } catch (error) {
+    if (error instanceof InteractionRequiredAuthError) {
+      return (await client.acquireTokenPopup({ account, scopes })).accessToken;
+    }
+    throw error;
+  }
+}
+
 export async function signOut(): Promise<void> {
   if (!client || !account) throw new Error('Er is geen aangemeld account.');
   identity.set(null);

@@ -98,15 +98,33 @@ describe('domain services', () => {
     repo.data.get('reference-data')!.push({ kind: 'catalog', id: 'catalog', drills: [
       { id: 'd1', name_nl: 'Vangen', category: 'catching', skills: ['catch'], equipment_required: [], indoor_friendly: true, space_required: 'zaal', duration_minutes: { default: 10, minimum: 10, maximum: 10 }, selection: { minimum_repeat_gap_days: 14 } },
       { id: 'd2', name_nl: 'Anders', category: 'other', skills: ['other'], equipment_required: [], indoor_friendly: true, space_required: 'zaal', duration_minutes: { default: 10, minimum: 10, maximum: 10 }, selection: { minimum_repeat_gap_days: 0 } },
+      { id: 'd3', name_nl: 'Vangvariant', category: 'catching', skills: ['catch'], equipment_required: [], indoor_friendly: true, space_required: 'zaal', duration_minutes: { default: 10, minimum: 10, maximum: 10 }, selection: { minimum_repeat_gap_days: 14 } },
     ], categories: {}, warmup: { duration_minutes: 5, blocks: [] } });
     const svc = new ProgramService(repo, new CatalogService(repo), new SkillService(repo));
-    const result = await svc.createProgram(teamId, { startDate: '2026-01-05', day: 'dinsdag', time: '19:00', duration: 30, phase: 'Winter', location: 'zaal', equipment: [], field: false, cage: false, mound: false });
+    const result = await svc.createProgram(teamId, { startDate: '2026-01-05', day: 'dinsdag', time: '19:00', duration: 15, phase: 'Winter', location: 'zaal', equipment: [], field: false, cage: false, mound: false });
     expect(result.sessions).toHaveLength(12);
     expect(result.sessions[0].date).toBe('2026-01-06');
     expect(result.sessions[0].blocks.map(b => b.drill_id)).toContain('d1');
     expect(result.sessions[1].blocks.map(b => b.drill_id)).not.toContain('d1');
     expect(result.sessions.flatMap(s => s.blocks).map(b => b.drill_id)).not.toContain('d2');
+    expect(result.sessions.every(s => s.blocks.reduce((sum, b) => sum + b.minutes, 0) === 15)).toBe(true);
     expect((await svc.listSessions(result.program.id))?.every(s => s.team_id === teamId)).toBe(true);
+  });
+  it.each([
+    { reason: 'missing equipment', equipment: ['gloves'], duration: 70, gap: 0, date: '2026-01-06', planned: 20 },
+    { reason: 'a later repeat gap', equipment: [], duration: 70, gap: 14, date: '2026-01-13', planned: 20 },
+    { reason: 'a remainder below the drill minimum', equipment: [], duration: 65, gap: 0, date: '2026-01-06', planned: 85 },
+  ])('rejects the entire program for $reason without storing any sessions', async ({ equipment, duration, gap, date, planned }) => {
+    repo.data.get('reference-data')!.push({ kind: 'catalog', id: 'catalog', drills: [
+      { id: 'd1', name_nl: 'Vangen', category: 'catching', skills: ['catch'], equipment_required: equipment, indoor_friendly: true, space_required: 'zaal', duration_minutes: { default: duration, minimum: 8, maximum: duration }, selection: { minimum_repeat_gap_days: gap } },
+    ], categories: {}, warmup: { duration_minutes: 20, blocks: [] } });
+    const before = structuredClone(repo.data.get('team-records'));
+    const batch = vi.spyOn(repo, 'batch');
+    const svc = new ProgramService(repo, new CatalogService(repo), new SkillService(repo));
+    await expect(svc.createProgram(teamId, { startDate: '2026-01-05', day: 'dinsdag', time: '20:30', duration: 90, phase: 'Winter', location: 'zaal', equipment: [], field: false, cage: false, mound: false }))
+      .rejects.toMatchObject({ status: 422, code: 'VALIDATION_ERROR', details: { date, requestedMinutes: 90, plannedMinutes: planned, missingMinutes: 90 - planned } });
+    expect(batch).not.toHaveBeenCalled();
+    expect(repo.data.get('team-records')).toEqual(before);
   });
   it('refuses to create empty programs when age-group progression is missing', async () => {
     repo.data.get('reference-data')!.push({ kind: 'catalog', id: 'catalog', drills: [], categories: {}, warmup: { duration_minutes: 0, blocks: [] } });

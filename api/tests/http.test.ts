@@ -5,6 +5,9 @@ import { authorizeRequest } from '../src/auth.js';
 import { AppError } from '../src/errors/AppError.js';
 import { TeamAccessService } from '../src/services/teamAccess.js';
 import { MemoryRepository } from './memory.js';
+import { developmentFixture } from './developmentFixture.js';
+import { DevelopmentService } from '../src/services/development.js';
+import { DevelopmentAssignmentService } from '../src/services/developmentAssignments.js';
 
 vi.mock('../src/auth.js', async importOriginal => {
   const original = await importOriginal<typeof import('../src/auth.js')>();
@@ -30,6 +33,7 @@ beforeAll(async () => {
     import('../src/functions/teamAssignments.js'),
     import('../src/functions/listTeamData.js'), import('../src/functions/identity.js'),
     import('../src/functions/curriculum.js'),
+    import('../src/functions/development.js'),
   ]);
 });
 beforeEach(() => {
@@ -44,6 +48,8 @@ beforeEach(() => {
     programs: { createProgram: vi.fn().mockResolvedValue({ program: { id }, sessions: [] }), getProgram: vi.fn().mockResolvedValue({ id }), listSessions: vi.fn().mockResolvedValue([]), listTeamSessions: vi.fn().mockResolvedValue([]), getSession: vi.fn().mockResolvedValue(session), saveSession: vi.fn().mockImplementation(async (_id, s) => s), healthCheck: vi.fn() },
     teamAccess: { requireGoalWrite: vi.fn().mockResolvedValue(undefined), list: vi.fn().mockResolvedValue([]), assign: vi.fn(), unassign: vi.fn() },
     curriculum: { get: vi.fn().mockResolvedValue(null), save: vi.fn() },
+    development: { get: vi.fn().mockResolvedValue(null), save: vi.fn() },
+    developmentAssignments: { get: vi.fn().mockResolvedValue(null), save: vi.fn() },
   };
   registerServices(mocks);
 });
@@ -54,7 +60,7 @@ async function call(name: string, options: { params?: Record<string, string>; qu
 }
 describe('Functions registration and contracts', () => {
   it('registers plan operations, OpenAPI and trainer assignment routes through the authorization wrapper', () => {
-    expect(registrations.size).toBe(26);
+    expect(registrations.size).toBe(30);
     for (const value of registrations.values()) expect(value.authLevel).toBe('anonymous');
   });
   it('enforces goal writes and restricts trainer assignment management to committee members', async () => {
@@ -81,6 +87,46 @@ describe('Functions registration and contracts', () => {
     vi.mocked(mocks.curriculum.save).mockResolvedValue({ age_group_id: 'U12', version: 1, goals: [{ id, ...input.goals[0] }], skills: input.skills });
     expect(await call('saveCurriculum', { params: { ageGroupId: 'U12' }, body: input })).toMatchObject({ status: 200 });
     expect(mocks.curriculum.save).toHaveBeenCalledWith('U12', 0, { goals: input.goals, skills: input.skills });
+  });
+  it('restricts development model edits and team goal edits', async () => {
+    expect(await call('saveDevelopmentModel', { body: {} })).toMatchObject({ status: 403 });
+    expect(mocks.development.save).not.toHaveBeenCalled();
+    vi.mocked(mocks.teamAccess.requireGoalWrite).mockRejectedValue(new AppError('FORBIDDEN', 'Not assigned', 403));
+    expect(await call('saveDevelopmentAssignments', { params: { teamId: id, seasonId: id }, body: {} })).toMatchObject({ status: 403 });
+    expect(mocks.developmentAssignments.save).not.toHaveBeenCalled();
+    vi.mocked(authorizeRequest).mockResolvedValue({ objectId: id, isCommittee: true });
+    expect(await call('saveDevelopmentModel', { body: {} })).toMatchObject({ status: 422 });
+    const model = developmentFixture();
+    vi.mocked(mocks.development.save).mockResolvedValue({ version: 1, model, savedAt: '', savedBy: id });
+    expect(await call('saveDevelopmentModel', { body: { expectedVersion: 0, model } })).toMatchObject({ status: 200 });
+    expect(mocks.development.save).toHaveBeenCalledWith(0, model, id);
+    mocks.teamAccess = new TeamAccessService(new MemoryRepository({ 'team-records': [
+      { id: `trainer-${id}`, team_id: id, object_id: id, kind: 'trainer-assignment' },
+    ] }));
+    vi.mocked(authorizeRequest).mockResolvedValue({ objectId: id, isCommittee: false });
+    vi.mocked(mocks.developmentAssignments.save).mockResolvedValue({ teamId: id, seasonId: id, version: 1, modelVersion: 1, assignments: [], savedAt: '', savedBy: id });
+    expect(await call('saveDevelopmentAssignments', { params: { teamId: id, seasonId: id }, body: { expectedVersion: 0, modelVersion: 1, assignments: [] } })).toMatchObject({ status: 200 });
+    const otherTeam = 'c3eb3c95-a2f4-4a2d-b1ef-428e1af23422';
+    expect(await call('saveDevelopmentAssignments', { params: { teamId: otherTeam, seasonId: id }, body: { expectedVersion: 0, modelVersion: 1, assignments: [] } })).toMatchObject({ status: 403 });
+  });
+  it('stores a model and assigned trainer choices through the registered endpoints', async () => {
+    const seasonId = 'c3eb3c95-a2f4-4a2d-b1ef-428e1af23422';
+    const repo = new MemoryRepository({ 'team-records': [
+      { id: seasonId, team_id: id, kind: 'season', age_group_id: 'U12' },
+      { id: `trainer-${id}`, team_id: id, object_id: id, kind: 'trainer-assignment' },
+    ] });
+    mocks.teamAccess = new TeamAccessService(repo);
+    mocks.development = new DevelopmentService(repo);
+    mocks.developmentAssignments = new DevelopmentAssignmentService(repo);
+    const model = developmentFixture();
+    vi.mocked(authorizeRequest).mockResolvedValue({ objectId: id, isCommittee: true });
+    expect(await call('saveDevelopmentModel', { body: { expectedVersion: 0, model } })).toMatchObject({ status: 200, jsonBody: { development: { version: 1 } } });
+    vi.mocked(authorizeRequest).mockResolvedValue({ objectId: id, isCommittee: false });
+    const assignment = { id: 'choice', teamId: id, seasonId, ageGroupId: 'age_11_12', goalType: 'skill_goal', goalId: 'sg_age_11_12', active: true, priority: 2 };
+    const input = { expectedVersion: 0, modelVersion: 1, assignments: [assignment] };
+    expect(await call('saveDevelopmentAssignments', { params: { teamId: id, seasonId }, body: input })).toMatchObject({ status: 200, jsonBody: { developmentAssignments: { version: 1, assignments: [assignment] } } });
+    expect(await call('getDevelopmentAssignments', { params: { teamId: id, seasonId } })).toMatchObject({ status: 200, jsonBody: { developmentAssignments: { modelVersion: 1, assignments: [assignment] } } });
+    expect(await call('saveDevelopmentAssignments', { params: { teamId: id, seasonId }, body: input })).toMatchObject({ status: 409 });
   });
   it('restricts team administration and other team mutations', async () => {
     expect(await call('createTeam', { body: { name: 'Team', age_group_id: 'U12' } })).toMatchObject({ status: 403 });

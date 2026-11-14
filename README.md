@@ -2,6 +2,12 @@
 
 Een Nederlandstalige progressive web app voor honkbaltrainers en technische commissies. Trainers zoeken oefeningen, bereiden trainingen voor en beheren teamdoelen. De app ondersteunt meerdere teams in Beeball, U12, U15, U21 en senioren.
 
+## Gebruikershandleidingen
+
+- [Handleiding voor de Technische Commissie](docs/handleiding-tc.md)
+- [Handleiding voor trainers](docs/handleiding-trainers.md)
+- [Verificatie, nog te testen onderdelen en bekende beperkingen](docs/controlelijst-handleidingen.md)
+
 ## Wat zit erin?
 
 - Een doorzoekbare oefencatalogus met materiaal, uitleg en links naar video's.
@@ -12,9 +18,67 @@ Een Nederlandstalige progressive web app voor honkbaltrainers en technische comm
 
 De TC bepaalt de inhoud van de leerlijn zelf. Vaardigheids-ID's moeten overeenkomen met de tags in de oefencatalogus om oefeningen voor een programma te kunnen selecteren. Leeftijdsovergangen worden niet automatisch bepaald. Het leeftijdsfilter van de catalogus is nog informatief.
 
+### Ontwikkelleerlijn
+
+De ontwikkelleerlijn staat naast de bestaande leerlijn en teamdoelen. Een TC-lid
+kan onder **Beheer > Skills** een afzonderlijk aangeleverd JSON-bestand laden, bekijken
+en bewust opslaan; alleen laden importeert niets. Nieuwe versies behouden de
+doelstatus en overschrijven eerdere versies niet. De TC kan doelen bewerken in
+het formulier; het volledige model, inclusief leeftijdsbanden, vaardigheden,
+criteria en koppelingen, is via de JSON-editor te wijzigen. Het bestand met
+conceptgegevens is niet opgenomen in deze repository.
+
+Bij een teamseizoen verschijnen doelen uit alle actieve leeftijdsbanden die
+de teamcategorie overlappen, inclusief grensleeftijden. Een toegewezen trainer
+of TC-lid kan doelen activeren en teamafwijkingen vastleggen. De teamkeuze
+blijft aan de gekozen modelversie verbonden totdat expliciet een nieuwere
+versie wordt gekozen en opgeslagen. Dat verandert geen centrale doelen of
+bestaande seizoenssamenstellingen. Met de aangeleverde banden valt Beeball
+onder 6 jaar buiten de 6–8-band; 16+ wordt bij U21 en senioren gebruikt. Er is
+geen individuele spelersregistratie.
+
+De ontwikkeldoelen worden nog niet gekoppeld aan oefeningen of gebruikt voor
+trainingsgeneratie: de vaardigheids-ID's verschillen van de catalogustags.
+Conceptdoelen en streefwaarden zijn voorstellen, geen gevalideerde normen.
+Controleer de inhoud vóór gebruik en sla geen persoonsgegevens van
+jeugdspelers op in notities.
+
+Bij een nieuwe club zonder teams kan een TC-lid het eerste team en seizoen aanmaken via **Beheer**. De oefencatalogus is ook zonder team beschikbaar.
+
+### Trainers toevoegen
+
+Een TC-lid met de benodigde Entra-beheerrechten kan onder **Beheer > Users** een
+e-mailadres zoeken en een gevonden gebruiker aan het actieve team koppelen.
+Voor een onbekend adres kan diegene na bevestiging een gast uitnodigen; de app
+kent de Trainer-rol toe en koppelt de gebruiker aan het team. Het uitnodigen,
+rol toekennen en koppelen zijn afzonderlijke stappen: bij een fout meldt de
+app wat mogelijk al is gebeurd; zoek opnieuw voordat je verdergaat. Verwijderen
+ontkoppelt alleen het team en verwijdert niet de gast of de Trainer-rol.
+Bestaande koppelingen blijven werken; via **Toon namen en e-mailadressen**
+kunnen object-ID's worden opgezocht.
+
+Een Entra-beheerder kan onder **TC-leden beheren** ook een bestaande gebruiker
+op e-mailadres de TC-rol toekennen of een gast uitnodigen. De TC-rol geldt
+voor de hele club: TC-leden kunnen doelen en trainingen van alle teams
+wijzigen, clubdoelen beheren en teams en trainerkoppelingen beheren. De rol
+wijzigt bestaande Trainer-rollen en teamkoppelingen niet en geeft geen
+Entra-beheerdersrechten. Intrekken van de TC-rol gaat voorlopig via Entra;
+een toegangsverandering is mogelijk pas na vernieuwing van het aanmeldtoken
+zichtbaar.
+
+De frontend gebruikt hiervoor namens de aangemelde beheerder gedelegeerde
+Microsoft Graph-rechten `User.Read.All`, `User.Invite.All`,
+`Application.Read.All` en `AppRoleAssignment.ReadWrite.All`. Deze laatste
+toestemming is ruim en kan roltoewijzingen in de tenant beheren: beperk de
+toestemming tot de aangewezen beheerder, bescherm dit account met MFA en
+controleer de Entra-auditlogs. De gebruiker moet daarnaast de toepasselijke
+Entra-beheerrol hebben; een TC-applicatierol alleen geeft geen Graph-rechten.
+Gastuitnodigingen moeten in de tenant zijn toegestaan. E-mailadressen van
+trainers zijn persoonsgegevens. Geen Graph-clientsecret is nodig.
+
 ## Technologie
 
-De frontend in `app/` gebruikt SvelteKit, TypeScript, Vite en MSAL. De API in `api/` gebruikt Azure Functions, TypeScript en Microsoft Entra ID. Azure Cosmos DB bewaart teamgegevens en referentiegegevens. `shared/` bevat gedeelde types en validatie. Vitest verzorgt de tests. De beoogde hosting gebruikt Azure Storage en Functions; actuele uitrolconfiguratie en lokale sessiegegevens staan bewust niet in deze openbare repository.
+De frontend in `app/` gebruikt SvelteKit, TypeScript, Vite en MSAL. De API in `api/` gebruikt Azure Functions, TypeScript en Microsoft Entra ID. Azure Cosmos DB bewaart teamgegevens en referentiegegevens. `shared/` bevat gedeelde types en validatie. Vitest verzorgt de tests. De PWA wordt gehost op Azure Static Web Apps en de API op Azure Functions; actuele uitrolconfiguratie en lokale sessiegegevens staan bewust niet in deze openbare repository.
 
 ## Lokaal ontwikkelen
 

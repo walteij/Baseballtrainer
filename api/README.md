@@ -20,15 +20,31 @@ No containers, migrations or seed data are created by this scaffold. The integra
 
 | Container | Partition key | Logical collections / records |
 |---|---|---|
-| `team-records` | `/team_id` | `team`, `season`, `season-year`, `team-goal`, `composition`, `program`, `session`, `skill-progress`, `trainer-assignment` |
-| `reference-data` | `/pk` | `catalog`, `skill`, `progression`, `age-goal` |
+| `team-records` | `/team_id` | `team`, `season`, `season-year`, `team-goal`, `composition`, `program`, `session`, `skill-progress`, `trainer-assignment`, `development-assignments` |
+| `reference-data` | `/pk` | `catalog`, `skill`, `progression`, `age-goal`, `curriculum`, `development-model` |
 
 Reference documents have `id`, `kind`, and `pk`, plus the fields from the matching shared entity. Use `pk=catalog` for one `catalog` document containing `drills`, `categories` and `warmup`; `pk=skills` for `skill`; `pk=progression:{age_group_id}:{version}` for progression; `pk=age-goal:{age_group_id}:{version}` for generic goals. This permits a stable generic goal ID to recur across versions while remaining unique inside a partition. Reference queries use kind/age fields and can cross partitions. Integration must ensure the catalog document fits Cosmos's item size limit.
 
 Committee members can publish an age-group curriculum through `PUT /api/age-groups/{ageGroupId}/curriculum`, with an expected version for conflict detection. Each publication is a new immutable document under `pk=curriculum:{ageGroupId}`; the current version supplies generic goals and skill progression, while previous versions remain available to existing season compositions. Skill IDs must match catalog tags for program selection. The endpoint does not infer a player's progression or copy objectives between categories.
 
+The separate development model is available at `GET` / `PUT
+/api/development-model`; writes require `Committee`, the full validated model
+and an `expectedVersion` (0 only for the initial version). Each version is a
+new document under `pk=development-model`, without modifying the existing
+curriculum. `GET` / `PUT
+/api/teams/{teamId}/seasons/{seasonId}/development-goals` reads or saves a
+team's development-goal assignments; writes require the assigned trainer or
+Committee and include both `expectedVersion` and `modelVersion`. Assignment
+revisions are immutable team-partition documents and refer to an immutable
+model version. Goal references, overlapping active age bands, duplicate
+assignments and concurrent writes are checked. Archived goals cannot be
+activated. No seed data is imported at deployment; a Committee user must
+explicitly load and save a supplied model. The ignored `data/nl/` directory
+is optional for tests: synthetic fixtures always run, while the actual seed
+test runs only when that separately supplied file is present.
+
 Validate the local catalog without writing using `npm run catalog:import --workspace honkbal-trainer-api`. Once the target Cosmos database and container exist and the signed-in operator has Cosmos **data-plane** read/query and upsert permissions, set `COSMOSDB_ENDPOINT` and optionally `COSMOSDB_DATABASE`, then add `-- --apply` to run the import. The script uses `DefaultAzureCredential`, checks the document size and rejects conflicting catalog records. It creates no database, container, goals, skills, players or credentials. Existing `catalog` data is overwritten on a successful repeated import. The source catalog is not included in the public repository pending rights review.
 
 Each team document has `team_id=id`. Every team-owned document has that team's ID in `team_id`, and a `kind` identifying its logical collection. Skill progress IDs are `skill-{skill_id}`. Compositions use `composition-{seasonId}`; they contain a frozen `goals` snapshot and source/version references, while individual team goals remain separate documents. A `season-year-{year}` guard record per team is created atomically with the season to enforce one season per calendar year. Imports of existing seasons must also create these guards. Team programs and their 12 generated sessions are created in a same-partition transactional batch. Composition and associated team-goal creates, updates and removals are also atomic; Cosmos's 100-operation limit is enforced and concurrent composition writes use ETags. Program and session routes have no team identifier in their approved contracts; they locate globally unique UUIDs across partitions, then session lists and writes use the discovered team partition. Team/season routes always use the supplied team partition.
 
-The scaffold planner produces 12 weekly sessions beginning on or after the configured start date. It filters by the team's current category skill mappings, required equipment, indoor and field/cage/mound constraints, and enforces each drill's minimum repeat gap; unfilled time remains unallocated when no eligible drill fits. The catalog and progression reference records must exist before program creation; a missing progression is reported rather than silently creating empty sessions. No universal age norms are inferred.
+The scaffold planner produces 12 weekly sessions beginning on or after the configured start date. It filters by the team's current category skill mappings, required equipment, indoor and field/cage/mound constraints, and enforces each drill's minimum repeat gap. Every session must fill the requested duration: if any week cannot be filled, creation returns HTTP 422 (`VALIDATION_ERROR`) with the date, requested, planned and missing minutes; no program or sessions are saved. Check equipment, space, curriculum skill mappings and the available drill pool rather than silently relaxing constraints. Existing underfilled programs are not changed automatically. The catalog and progression reference records must exist before program creation; a missing progression is reported rather than silently creating empty sessions. The optional supplied-catalog test verifies all twelve 90-minute HB3 demo sessions, block continuity and repeat gaps when `data/nl/` is present. No universal age norms or ceiling-height suitability are inferred.

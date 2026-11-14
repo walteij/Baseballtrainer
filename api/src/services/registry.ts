@@ -8,6 +8,8 @@ import { CatalogService } from './catalog.js';
 import { ProgramService } from './programs.js';
 import { TeamAccessService } from './teamAccess.js';
 import { CurriculumService } from './curriculum.js';
+import { DevelopmentService } from './development.js';
+import { DevelopmentAssignmentService } from './developmentAssignments.js';
 import type { ICatalogService } from './interfaces/ICatalogService.js';
 import type { IGoalsService } from './interfaces/IGoalsService.js';
 import type { IProgramService } from './interfaces/IProgramService.js';
@@ -22,6 +24,8 @@ export interface Services {
   teams: ITeamService;
   teamAccess: Pick<TeamAccessService, 'requireGoalWrite' | 'list' | 'assign' | 'unassign'>;
   curriculum: Pick<CurriculumService, 'get' | 'save'>;
+  development: Pick<DevelopmentService, 'get' | 'save'>;
+  developmentAssignments: Pick<DevelopmentAssignmentService, 'get' | 'save'>;
   cosmos: { healthCheck(): Promise<boolean> };
   hostStorage: { healthCheck(): Promise<boolean> };
 }
@@ -57,7 +61,7 @@ export function getServices(): Services {
     const catalog = new CatalogService(repo);
     const skills = new SkillService(repo);
     const hostStorage = createHostStorageCheck(config);
-    services = { catalog, skills, cosmos: repo, hostStorage, teams: new TeamService(repo), goals: new GoalsService(repo), programs: new ProgramService(repo, catalog, skills), teamAccess: new TeamAccessService(repo), curriculum: new CurriculumService(repo) };
+    services = { catalog, skills, cosmos: repo, hostStorage, teams: new TeamService(repo), goals: new GoalsService(repo), programs: new ProgramService(repo, catalog, skills), teamAccess: new TeamAccessService(repo), curriculum: new CurriculumService(repo), development: new DevelopmentService(repo), developmentAssignments: new DevelopmentAssignmentService(repo) };
   }
   return services;
 }

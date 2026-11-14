@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../src/lib/api';
 import { dateNl } from '../src/lib/services/date';
 import { icalForSession } from '../src/lib/services/share';
@@ -11,6 +11,7 @@ beforeEach(() => {
   vi.restoreAllMocks();
   vi.mocked(accessToken).mockResolvedValue('test-token');
 });
+afterEach(() => vi.unstubAllGlobals());
 
 describe('live API client', () => {
   it('sends an authenticated request and maps the team response', async () => {
@@ -35,6 +36,21 @@ describe('live API client', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ error: { code: 'MISSING_PROGRESSION' } }), { status: 422, headers: { 'content-type': 'application/json' } }));
     await expect(api.createProgram('team', { startDate: '2026-01-05', day: 'dinsdag', time: '19:00', duration: 30, phase: 'Winter', location: 'zaal', equipment: [], field: false, cage: false, mound: false }))
       .rejects.toThrow('nog geen vaardighedenleerlijn');
+  });
+  it('shows the generator validation explanation instead of a generic 422', async () => {
+    const message = 'Geen volledig seizoensplan mogelijk: de training op 2026-11-18 mist 70 minuten. Er is niets opgeslagen.';
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ error: { code: 'VALIDATION_ERROR', message } }), { status: 422, headers: { 'content-type': 'application/json' } }));
+    await expect(api.createProgram('team', { startDate: '2026-11-13', day: 'woensdag', time: '20:30', duration: 90, phase: 'Winter', location: 'zaal', equipment: [], field: false, cage: false, mound: false }))
+      .rejects.toThrow(message);
+  });
+  it('uses catalog ball identifiers for saved settings and program generation', async () => {
+    const settings = { startDate: '2026-11-13', day: 'woensdag', time: '20:30', duration: 90, phase: 'Winter', location: 'zaal', equipment: ['ballen', 'balls', 'gloves', 'net'], field: false, cage: true, mound: true };
+    vi.stubGlobal('localStorage', { getItem: vi.fn().mockReturnValue(JSON.stringify(settings)) });
+    expect((await api.getSettings('team')).equipment).toEqual(['balls', 'gloves', 'net']);
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ program: { id: 'program' }, sessions: [] }), { status: 201 }));
+    await api.createProgram('team', settings);
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body)).settings).toEqual({ ...settings, equipment: ['balls', 'gloves', 'net'] });
+    expect(settings.equipment).toEqual(['ballen', 'balls', 'gloves', 'net']);
   });
   it('sends goal skill IDs and omits temporary draft IDs', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ goals: [] }), { status: 200 }));

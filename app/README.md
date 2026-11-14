@@ -21,6 +21,11 @@ Controleer voor publicatie ook het aanmelden-scherm in een browser, niet alleen 
 
 De frontend gebruikt Microsoft-aanmelding met MSAL en de live API-client. Stel vóór de build `VITE_ENTRA_TENANT_ID`, `VITE_ENTRA_PWA_CLIENT_ID`, `VITE_ENTRA_API_CLIENT_ID` en `VITE_API_BASE_URL` in. Het API-adres eindigt op `/api` en gebruikt HTTPS (localhost mag HTTP gebruiken). Registreer de exacte website-origin met afsluitende `/` als SPA-redirect in Entra. Deze waarden zijn geen secrets. Zonder configuratie of geldige aanmelding wordt geen voorbeelddata getoond. De API controleert rollen en teamtoewijzingen; UI-zichtbaarheid is geen beveiliging.
 
+De productiebuild stopt bij ontbrekende/ongeldige Entra-ID's of een ongeldig
+API-adres. Geef deze waarden mee in hetzelfde proces als de build of via een
+lokale Vite-omgeving; PowerShell-aanroepen delen hun procesvariabelen niet.
+Controleer de aanmeldconfiguratie ook in de gepubliceerde app.
+
 Instellingen en de warming-upchecklist worden lokaal per team op het apparaat bewaard. Voor het eerste gebruik moeten de bestaande catalogus en eventuele door de club vastgestelde leeftijdsdoelen in Cosmos zijn geïmporteerd; de app verzint die doelen niet. Het leeftijdsfilter in de catalogus is informatief, omdat categorie-/skillkoppelingen nog ontbreken. Aanmelden, het volledige HB3-programma en video afspelen zijn live bevestigd; aanvullende apparaat- en roltests staan in de [controlelijst bij de gebruikershandleidingen](../docs/controlelijst-handleidingen.md).
 
 Materiaalkeuzes voor ballen en handschoenen gebruiken de catalogus-ID's
@@ -36,6 +41,40 @@ bij ontbreken). Alleen de website-origin, niet het paginapad, gaat mee bij
 deze cross-origin aanvraag; de algemene hostpolicy hoeft niet ruimer.
 Een gewone YouTube-link blijft beschikbaar wanneer een video of browser
 insluiten blokkeert.
+
+## Clubkleuren en PWA-iconen
+
+Het thema gebruikt zwart (`#111111`), clubrood (`#C92E32`) en donkerrood
+(`#991F24`) met neutrale oppervlakken. Kleine accentteksten gebruiken donkerrood
+voor voldoende contrast op lichtrode vlakken. De donkere weergave blijft
+beschikbaar met witte tekst en neutrale donkere vlakken; kleine accentteksten
+worden daar wit gehouden voor leesbaarheid. De standaardkleuren staan als CSS-tokens in
+`src/app.css`.
+Statuskleuren staan los van de clubaccenten: groen (`#26834A`) voor afgerond,
+oranje (`#D58A00`) voor waarschuwingen, rood (`#B42318`) voor fouten en blauw
+(`#2878B5`) voor informatie. De bestaande voltooid-badge gebruikt groen en
+foutmeldingen gebruiken de foutkleur; de overige tokens zijn beschikbaar voor
+bijbehorende statussen.
+
+Plaats broniconen in `static/icons`, niet in de gegenereerde map `build`.
+`static/manifest.webmanifest` verwijst afzonderlijk naar de gewone Android-
+iconen en de aangeleverde maskable varianten (192 en 512 pixels).
+`src/app.html` verwijst naar de PNG-favicons en het 180-pixel Apple-touch-icoon
+voor iPhone/iPad. Het clublogo staat ook in de navigatiebalk. De serviceworker
+neemt deze statische bestanden mee in de app-shell.
+
+Controleer na publicatie het beginschermicoon op echte Android- en
+iOS-apparaten. Bestaande installaties kunnen oude iconen vasthouden; opnieuw
+toevoegen aan het beginscherm kan nodig zijn. Alleen lokaal bestanden wijzigen
+werkt de gepubliceerde PWA niet bij.
+
+Gebruik bij publicatie naar Azure Static Web Apps de versiebeheerde
+`staticwebapp.config.json` uit deze map: kopieer die naast de buildbestanden
+in de publicatiemap en wijs de SWA CLI daar expliciet op met
+`--swa-config-location <publicatiemap>`. De configuratie behoudt de SPA-fallback
+naar `200.html` en serveert `.webmanifest` als `application/manifest+json`.
+Houd deze hostconfiguratie buiten `static/`, zodat de serviceworker haar niet
+probeert te cachen: Azure maakt het configuratiebestand niet publiek.
 
 Een TC-lid kan onder Beheer per leeftijdscategorie clubdoelen en vaardigheidsleerlijnen vaststellen. Elke wijziging maakt een nieuwe versie; bestaande seizoenssamenstellingen blijven op hun oude versie staan. De vaardigheids-ID moet overeenkomen met een catalogustag om oefeningen te selecteren. Leeftijdsovergangen worden niet automatisch bepaald; de TC legt de doelen per categorie vast.
 

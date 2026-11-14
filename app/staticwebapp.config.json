@@ -1,0 +1,15 @@
+{
+  "navigationFallback": {
+    "rewrite": "/200.html",
+    "exclude": [
+      "/_app/*",
+      "/static/*",
+      "/assets/*",
+      "/api/*",
+      "/*.{css,js,json,webmanifest,map,png,jpg,jpeg,gif,svg,ico,webp,woff,woff2,ttf}"
+    ]
+  },
+  "mimeTypes": {
+    ".webmanifest": "application/manifest+json"
+  }
+}

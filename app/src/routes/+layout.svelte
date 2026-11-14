@@ -71,7 +71,7 @@
 {:else if authState === 'error'}<main class="main"><section class="card"><h1>Aanmelden mislukt</h1><p role="alert">{authError}</p><button class="btn secondary" onclick={() => { authState = 'loading'; void startAuth(); }}>Opnieuw proberen</button><button class="btn secondary" onclick={() => { void signOut().catch(error => { authError = error instanceof Error ? error.message : 'Afmelden is mislukt.'; }); }}>Afmelden</button></section></main>
 {:else}
 <AppBar class="appbar">
-  <a class="brand" href="/{suffix}"><span class="brand-mark">HT</span><span>Honkbal Trainer<small>TRAIN MET EEN PLAN</small></span></a>
+  <a class="brand" href="/{suffix}"><img class="brand-mark" src="/icons/icon-192.png" alt="" width="40" height="40" /><span>Honkbal Trainer<small>TRAIN MET EEN PLAN</small></span></a>
   <div class="header-actions">
     <a class="icon-button" href="/drills{suffix}" aria-label="Zoek drills"><Search size={20}/></a>
     <button class="icon-button" onclick={toggleTheme} aria-label={dark ? 'Schakel lichte weergave in' : 'Schakel donkere weergave in'}>{#if dark}<Sun size={20}/>{:else}<Moon size={20}/>{/if}</button>

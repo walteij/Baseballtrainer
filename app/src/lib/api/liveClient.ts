@@ -1,5 +1,5 @@
 import { accessToken } from '$lib/auth';
-import type { AgeGroup, ApiClient, Catalog, Curriculum, DevelopmentAssignments, DevelopmentVersion, Goal, Program, Session, Settings, Skill, Team, TeamSeason } from './types';
+import type { AgeGroup, ApiClient, Catalog, Curriculum, DevelopmentAssignments, DevelopmentVersion, Goal, Program, Session, Settings, Skill, Team, TeamSeason, TransitionCheck } from './types';
 
 class ApiError extends Error {
   constructor(public readonly status: number, message: string) { super(message); }
@@ -135,6 +135,7 @@ export const liveClient: ApiClient = {
   saveDevelopment: async (expectedVersion, model) => (await request<{ development: DevelopmentVersion }>('/development-model', 'PUT', { expectedVersion, model })).development,
   getDevelopmentAssignments: async (teamId, seasonId) => (await request<{ developmentAssignments: DevelopmentAssignments | null }>(`/teams/${segment(teamId)}/seasons/${segment(seasonId)}/development-goals`)).developmentAssignments,
   saveDevelopmentAssignments: async (teamId, seasonId, input) => (await request<{ developmentAssignments: DevelopmentAssignments }>(`/teams/${segment(teamId)}/seasons/${segment(seasonId)}/development-goals`, 'PUT', input)).developmentAssignments,
+  getTransitionCheck: async (teamId, seasonId) => (await request<{ transitionCheck: TransitionCheck }>(`/teams/${segment(teamId)}/seasons/${segment(seasonId)}/transition-check`)).transitionCheck,
   listAssignments: async teamId => (await request<{ assignments: { objectId: string }[] }>(`/teams/${segment(teamId)}/trainers`)).assignments,
   assignTrainer: async (teamId, objectId) => { await request<void>(`/teams/${segment(teamId)}/trainers/${segment(objectId)}`, 'PUT'); },
   unassignTrainer: async (teamId, objectId) => { await request<void>(`/teams/${segment(teamId)}/trainers/${segment(objectId)}`, 'DELETE'); },

@@ -34,6 +34,7 @@ beforeAll(async () => {
     import('../src/functions/listTeamData.js'), import('../src/functions/identity.js'),
     import('../src/functions/curriculum.js'),
     import('../src/functions/development.js'),
+    import('../src/functions/getTransitionCheck.js'),
   ]);
 });
 beforeEach(() => {
@@ -50,6 +51,7 @@ beforeEach(() => {
     curriculum: { get: vi.fn().mockResolvedValue(null), save: vi.fn() },
     development: { get: vi.fn().mockResolvedValue(null), save: vi.fn() },
     developmentAssignments: { get: vi.fn().mockResolvedValue(null), save: vi.fn() },
+    developmentSteering: { transitionCheck: vi.fn().mockResolvedValue({ transition: null, modelVersion: null, skills: [] }) },
   };
   registerServices(mocks);
 });
@@ -60,7 +62,7 @@ async function call(name: string, options: { params?: Record<string, string>; qu
 }
 describe('Functions registration and contracts', () => {
   it('registers plan operations, OpenAPI and trainer assignment routes through the authorization wrapper', () => {
-    expect(registrations.size).toBe(30);
+    expect(registrations.size).toBe(31);
     for (const value of registrations.values()) expect(value.authLevel).toBe('anonymous');
   });
   it('enforces goal writes and restricts trainer assignment management to committee members', async () => {
@@ -190,6 +192,7 @@ describe('Functions registration and contracts', () => {
       ['createSeason', { params: { teamId: id }, body: { year: 2026, age_group_id: 'U12' } }, 201, 'teamSeason'],
       ['getSeasonGoals', { params: { teamId: id, seasonId: id } }, 200, 'sources'],
       ['saveSeasonGoals', { params: { teamId: id, seasonId: id }, body: { age_group_goal_version: 1, selected_generic_goal_ids: [], team_goals: [] } }, 200, 'composition'],
+      ['getTransitionCheck', { params: { teamId: id, seasonId: id } }, 200, 'transitionCheck'],
       ['openapi', {}, 200, 'openapi'],
     ];
     for (const [name, options, status, key] of cases) expect(await call(name, options), name).toMatchObject({ status, jsonBody: { [key]: expect.anything() } });

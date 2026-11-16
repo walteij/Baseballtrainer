@@ -1,6 +1,7 @@
 export type ErrorCode =
   | 'VALIDATION_ERROR'
   | 'MISSING_PROGRESSION'
+  | 'MISSING_DEVELOPMENT_MODEL'
   | 'BAD_REQUEST'
   | 'NOT_FOUND'
   | 'CONFLICT'

@@ -71,6 +71,15 @@ describe('domain services', () => {
     await expect(teams.createSeason(teamId, { year: 2027, age_group_id: 'U15' })).rejects.toMatchObject({ status: 409 });
     await expect(teams.createSeason(team2, { year: 2027, age_group_id: 'U15' })).resolves.toMatchObject({ team_id: team2 });
   });
+  it('lists teams by age group, then alphabetically with Rookies before Majors on equal prefixes', async () => {
+    repo.data.set('team-records', [
+      ['t1', 'Senioren 1', 'Senioren'], ['t2', 'U12-10', 'U12'], ['t3', 'U12-2', 'U12'],
+      ['t4', 'Beeball Majors', 'Beeball'], ['t5', 'Beeball Rookies', 'Beeball'],
+      ['t6', 'U15-1', 'U15'], ['t7', 'HB3', 'Senioren'],
+    ].map(([id, name, age]) => ({ kind: 'team', id, team_id: id, name, age_group_id: age })));
+    const names = (await new TeamService(repo).listTeams()).map(team => team.name);
+    expect(names).toEqual(['Beeball Rookies', 'Beeball Majors', 'U12-2', 'U12-10', 'U15-1', 'HB3', 'Senioren 1']);
+  });
   it('lists only the requested team seasons and sessions, sorted, and rejects missing teams', async () => {
     repo.data.get('team-records')!.push(
       { kind: 'session', id: 'later', team_id: teamId, date: '2026-03-01', time: '20:00' },

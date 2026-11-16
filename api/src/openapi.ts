@@ -12,7 +12,8 @@ const schemas: Record<string, object> = {
   Team: obj({ id: uuid, name: str, age_group_id: age, created_at: str, updated_at: str }, ['id', 'name', 'age_group_id']),
   TeamSeason: obj({ id: uuid, team_id: uuid, year: { type: 'integer' }, age_group_id: age, name: str, created_at: str }, ['id', 'team_id', 'year', 'age_group_id']),
   ProgramSettings: obj({ startDate: { type: 'string', format: 'date' }, day: str, time: str, duration: { type: 'integer', minimum: 15, maximum: 240 }, phase: str, location: str, equipment: sources, field: { type: 'boolean' }, cage: { type: 'boolean' }, mound: { type: 'boolean' } }),
-  Program: obj({ id: uuid, team_id: uuid, settings: ref('ProgramSettings'), created_at: str }),
+  ProgramDevelopmentSteering: obj({ season_id: uuid, model_version: version, assignments_version: version, categories: sources }),
+  Program: obj({ id: uuid, team_id: uuid, settings: ref('ProgramSettings'), created_at: str, development: ref('ProgramDevelopmentSteering') }, ['id', 'team_id', 'settings', 'created_at']),
   Session: obj({ id: uuid, team_id: uuid, program_id: uuid, title: str, date: str, time: str, end: str, phase: str, location: str, focus: str, blocks: array(obj({ id: uuid, time: str, title: str, minutes: { type: 'integer' }, detail: str, drill_id: str }, ['id', 'time', 'title', 'minutes', 'detail'])), completed: { type: 'boolean' }, completed_items: sources, equipment: sources }),
   Skill: obj({ id: str, name: str, description: str }),
   SkillProgression: obj({ id: str, skill_id: str, age_group_id: age, level: { type: 'integer' }, description: str, version }),
@@ -36,6 +37,11 @@ const schemas: Record<string, object> = {
     overrides: obj({ name: str, description: str, masteryTargetPercentage: { type: 'number', minimum: 0, maximum: 100 } }, []),
   }, ['id', 'teamId', 'seasonId', 'ageGroupId', 'goalType', 'goalId', 'active', 'priority']),
   DevelopmentAssignments: obj({ teamId: uuid, seasonId: uuid, version, modelVersion: version, assignments: array(ref('DevelopmentAssignment')), savedAt: { type: 'string', format: 'date-time' }, savedBy: uuid }),
+  TransitionCheck: obj({
+    transition: { ...obj({ from: age, to: age }), nullable: true },
+    modelVersion: { type: 'integer', minimum: 1, nullable: true },
+    skills: array(obj({ id: str, name: str, category: str, previousLevel: str, nextLevel: str, nextGoal: str, covered: { type: 'boolean' } })),
+  }),
   ComposedGoal: obj({ id: uuid, text: str, source: { type: 'string', enum: ['generiek', 'team'] }, generic_goal_version: version, season_id: uuid, team_id: uuid, skill_ids: sources }, ['id', 'text', 'source', 'season_id', 'team_id', 'skill_ids']),
   GoalComposition: obj({ id: str, team_id: uuid, season_id: uuid, age_group_goal_version: version, goals: array(ref('ComposedGoal')), selected_generic_goal_ids: array(uuid), team_goal_ids: array(uuid), created_at: str }),
   Drill: obj({
@@ -89,6 +95,9 @@ export const openapi = {
     '/teams/{teamId}/seasons/{seasonId}/development-goals': {
       get: operation('Get team development goals', obj({ developmentAssignments: { ...ref('DevelopmentAssignments'), nullable: true } }), 200, { params: [pathId('teamId'), pathId('seasonId')], errors: [404, 422, 500] }),
       put: operation('Save team development goals (assigned trainer or Committee)', obj({ developmentAssignments: ref('DevelopmentAssignments') }), 200, { params: [pathId('teamId'), pathId('seasonId')], body: obj({ expectedVersion: { type: 'integer', minimum: 0 }, modelVersion: version, assignments: array(ref('DevelopmentAssignment')) }), errors: [400, 404, 409, 422, 500] }),
+    },
+    '/teams/{teamId}/seasons/{seasonId}/transition-check': {
+      get: operation('Check which development skills carry over at an age-group transition and whether season goals cover them', obj({ transitionCheck: ref('TransitionCheck') }), 200, { params: [pathId('teamId'), pathId('seasonId')], errors: [404, 422, 500] }),
     },
     '/teams/{id}/skill-progress': { get: operation('Team progress', obj({ skillProgress: array(ref('TeamSkillProgress')) }), 200, { params: [pathId('id')], errors: [404, 422, 500] }) },
     '/teams/{id}/skill-progress/{skillId}': { put: operation('Update team progress', obj({ skillProgress: ref('TeamSkillProgress') }), 200, { params: [pathId('id'), pathId('skillId')], body: progressInput, errors: [400, 404, 422, 500] }) },

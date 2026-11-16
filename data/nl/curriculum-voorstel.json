@@ -1,0 +1,106 @@
+{
+  "status": "concept",
+  "beschrijving": "Voorstel op basis van de bestaande oefencatalogus; laat de technische commissie de inhoud beoordelen en vaststellen.",
+  "opmerkingen": [
+    "Niveaus zijn indicatieve clubinterne labels, geen leeftijdsgrenzen of toelatingseisen.",
+    "Kies oefeningen en belasting passend bij ervaring en ontwikkeling; de automatische programmaselectie filtert momenteel niet op leeftijd of niveau.",
+    "Niet alle doelen en situaties worden volledig door de catalogus gedekt; de TC kan deze aanvullen."
+  ],
+  "leeftijdsgroepen": [
+    {
+      "age_group_id": "Beeball",
+      "skills": [
+        { "id": "mechanics", "name": "Bewegen en gooibeweging", "description": "Een evenwichtige basisbeweging ontwikkelen.", "level": 1, "progression": "Oefent spelenderwijs een stabiele houding en eenvoudige beweegvolgorde." },
+        { "id": "contact", "name": "Balcontact", "description": "Een bal gecontroleerd leren raken.", "level": 1, "progression": "Probeert vanuit een stabiele houding een stilstaande bal te raken." },
+        { "id": "groundballs", "name": "Grondballen", "description": "Klaarstaan en een rollende bal verwerken.", "level": 1, "progression": "Oefent de klaarhouding en vangt of stopt een rustig rollende bal." },
+        { "id": "flyballs", "name": "Hoge ballen", "description": "Een aankomende bal volgen en verwerken.", "level": 1, "progression": "Leert een eenvoudig aangeboden bal volgen en reageert vanuit een veilige positie." },
+        { "id": "throwing", "name": "Gooien en overpakken", "description": "De bal gecontroleerd overpakken en naar een doel spelen.", "level": 1, "progression": "Oefent overpakken en gericht spelen over een passende korte afstand." },
+        { "id": "starts", "name": "Starten en honklopen", "description": "Reageren op een startsignaal en naar een honk lopen.", "level": 1, "progression": "Herkent het startsignaal en loopt naar het aangewezen honk." },
+        { "id": "communication", "name": "Samen communiceren", "description": "Eenvoudig afspreken en met teamgenoten communiceren.", "level": 1, "progression": "Oefent een eenvoudige afspraak om duidelijk te maken wie de bal speelt." }
+      ],
+      "goals": [
+        { "text": "Spelers oefenen een stabiele houding en maken spelenderwijs contact met een stilstaande bal.", "skill_ids": ["mechanics", "contact"] },
+        { "text": "Spelers oefenen klaarstaan, een rollende bal stoppen en de bal naar een teamgenoot spelen.", "skill_ids": ["groundballs", "throwing"] },
+        { "text": "Spelers reageren op een startsignaal en lopen naar het aangewezen honk.", "skill_ids": ["starts"] },
+        { "text": "Spelers leren een aankomende bal volgen en spreken met elkaar af wie deze speelt.", "skill_ids": ["flyballs", "communication"] }
+      ]
+    },
+    {
+      "age_group_id": "U12",
+      "skills": [
+        { "id": "mechanics", "name": "Basisbeweging", "description": "Evenwicht en een herhaalbare slag- en werpbeweging.", "level": 2, "progression": "Oefent houding, balans en een gecontroleerde basisbeweging." },
+        { "id": "contact", "name": "Balcontact", "description": "Gecontroleerd contact maken vanuit verschillende slagzones.", "level": 2, "progression": "Maakt vanuit een stabiele houding contact met ballen op verschillende hoogtes." },
+        { "id": "groundballs", "name": "Grondballen", "description": "Grondballen benaderen en verwerken.", "level": 2, "progression": "Komt vanuit de klaarhouding achter een rustig aangeboden grondbal en verwerkt deze." },
+        { "id": "flyballs", "name": "Hoge ballen", "description": "De bal volgen en naar een vangpositie bewegen.", "level": 2, "progression": "Volgt een hoog aangeboden bal en oefent positie kiezen onder begeleiding." },
+        { "id": "throwing", "name": "Gooien en overpakken", "description": "De bal gecontroleerd overpakken en gericht spelen.", "level": 2, "progression": "Oefent overpakken, voeten plaatsen en gericht gooien naar een teamgenoot." },
+        { "id": "starts", "name": "Starten en honklopen", "description": "Snel en gecontroleerd starten naar het volgende honk.", "level": 2, "progression": "Reageert op het startsignaal en loopt gecontroleerd naar het eerste honk." },
+        { "id": "communication", "name": "Samen communiceren", "description": "Duidelijk communiceren bij gezamenlijke veldacties.", "level": 2, "progression": "Roept tijdig en houdt rekening met afspraken en andere spelers." }
+      ],
+      "goals": [
+        { "text": "Spelers oefenen een herhaalbare basisbeweging en maken contact met ballen in meerdere slagzones.", "skill_ids": ["mechanics", "contact"] },
+        { "text": "Spelers verwerken grondballen en oefenen overpakken en gericht aangooien.", "skill_ids": ["groundballs", "throwing"] },
+        { "text": "Spelers volgen hoge ballen, kiezen een positie en communiceren wie de bal speelt.", "skill_ids": ["flyballs", "communication"] },
+        { "text": "Spelers starten op een signaal en lopen gecontroleerd naar het eerste honk.", "skill_ids": ["starts"] }
+      ]
+    },
+    {
+      "age_group_id": "U15",
+      "skills": [
+        { "id": "mechanics", "name": "Basisbeweging", "description": "Evenwicht en een herhaalbare slag- en werpbeweging.", "level": 3, "progression": "Past balans en een gecontroleerde beweegvolgorde toe bij variatie en hoger tempo in de oefening." },
+        { "id": "contact", "name": "Balcontact", "description": "Gecontroleerd contact maken vanuit verschillende slagzones.", "level": 3, "progression": "Maakt gericht contact met ballen in verschillende slagzones en kiest bewust een slagrichting." },
+        { "id": "timing", "name": "Timing aan slag", "description": "De slagbeweging afstemmen op variatie in aanbod en snelheid.", "level": 3, "progression": "Stemt de timing van de slag af op wisselend aanbod vanaf toss of werper." },
+        { "id": "groundballs", "name": "Grondballen", "description": "Grondballen benaderen, verwerken en doorspelen.", "level": 3, "progression": "Beweegt naar grondballen naar beide kanten en sluit de verwerking af met een worp naar het juiste honk." },
+        { "id": "flyballs", "name": "Hoge ballen", "description": "De bal volgen, routes kiezen en de vangpositie bereiken.", "level": 3, "progression": "Kiest een eerste stap en route naar verschillend aangeboden hoge ballen en maakt de vangactie af." },
+        { "id": "throwing", "name": "Gooien en overpakken", "description": "Overpakken, voetenwerk en een gerichte worp combineren.", "level": 3, "progression": "Combineert een gecontroleerde transfer en voetenwerk met een nauwkeurige worp over grotere afstand." },
+        { "id": "receiving", "name": "Aannemen", "description": "Worpen rustig en stabiel aannemen en de bal gecontroleerd houden.", "level": 3, "progression": "Neemt worpen stabiel aan, ook in de catcherspositie, en houdt de bal gecontroleerd voor het lichaam." },
+        { "id": "starts", "name": "Starten en honklopen", "description": "Starten en honklopen met aandacht voor reactie en richting.", "level": 3, "progression": "Start direct op signaal en kiest een strakke looplijn of bocht naar het volgende honk." },
+        { "id": "reads", "name": "Ballezen op de honken", "description": "De geslagen bal lezen en de loopbeslissing kiezen.", "level": 3, "progression": "Leest de bal vanaf de slag en kiest bewust tussen doorlopen en terugkeren." },
+        { "id": "communication", "name": "Samen communiceren", "description": "Duidelijk communiceren bij gezamenlijke veldacties.", "level": 3, "progression": "Roept vroeg en duidelijk voorrang en past afgesproken dekkings- en roepafspraken toe." }
+      ],
+      "goals": [
+        { "text": "Voortbouwen op U12: spelers slaan met een herhaalbare beweging en passen timing en slagrichting aan op variatie in het aanbod.", "skill_ids": ["mechanics", "contact", "timing"] },
+        { "text": "Voortbouwen op U12: spelers verwerken grondballen in beweging naar beide kanten en maken de actie af met een nauwkeurige worp naar het juiste honk.", "skill_ids": ["groundballs", "throwing"] },
+        { "text": "Spelers kiezen routes en voorrang bij hoge ballen en communiceren vroeg en duidelijk wie de bal speelt.", "skill_ids": ["flyballs", "communication"] },
+        { "text": "Spelers nemen worpen stabiel aan en houden de bal onder druk gecontroleerd in balbezit.", "skill_ids": ["receiving", "throwing"] },
+        { "text": "Spelers starten explosief op signaal, lezen de bal vanaf de slag en kiezen bewust tussen doorlopen en terugkeren.", "skill_ids": ["starts", "reads"] },
+        { "text": "Spelers passen balans en een gecontroleerde beweegvolgorde toe bij hoger tempo en wisselende oefenvormen.", "skill_ids": ["mechanics"] }
+      ]
+    },
+    {
+      "age_group_id": "U21",
+      "skills": [
+        { "id": "mechanics", "name": "Basisbeweging", "description": "Een consistente slag- en werpbeweging onder wisselende omstandigheden.", "level": 4, "progression": "Herhaalt en evalueert de basisbeweging bij verschillende oefenvormen." },
+        { "id": "contact", "name": "Balcontact", "description": "Gecontroleerd contact in uiteenlopende slagzones.", "level": 4, "progression": "Oefent controle over contact en richting bij gevarieerde balplaatsing." },
+        { "id": "groundballs", "name": "Grondballen", "description": "Grondballen in beweging verwerken en doorspelen.", "level": 4, "progression": "Verwerkt gevarieerde grondballen en kiest een passende vervolgactie." },
+        { "id": "flyballs", "name": "Hoge ballen", "description": "De bal lezen en doelgericht een route kiezen.", "level": 4, "progression": "Oefent lezen van de bal en een efficiënte route bij variatie in richting en diepte." },
+        { "id": "throwing", "name": "Gooien en overpakken", "description": "Een gecontroleerde transfer en gerichte worp combineren.", "level": 4, "progression": "Combineert transfer en voetenwerk met een gerichte worp naar een afgesproken doel." },
+        { "id": "starts", "name": "Starten en honklopen", "description": "Een gecontroleerde start en efficiënte looplijn.", "level": 4, "progression": "Oefent reactie en looplijn in wisselende spelsituaties." },
+        { "id": "communication", "name": "Samen communiceren", "description": "Teamafspraken toepassen bij gezamenlijke veldacties.", "level": 4, "progression": "Communiceert tijdig en past afgesproken verantwoordelijkheden toe." }
+      ],
+      "goals": [
+        { "text": "Spelers evalueren hun basisbeweging en oefenen gecontroleerd balcontact bij gevarieerde plaatsing.", "skill_ids": ["mechanics", "contact"] },
+        { "text": "Spelers verwerken gevarieerde grondballen en voeren een gerichte vervolgactie uit.", "skill_ids": ["groundballs", "throwing"] },
+        { "text": "Spelers kiezen routes naar hoge ballen en passen heldere teamafspraken toe.", "skill_ids": ["flyballs", "communication"] },
+        { "text": "Spelers oefenen een gecontroleerde start en looplijn in wisselende spelsituaties.", "skill_ids": ["starts"] }
+      ]
+    },
+    {
+      "age_group_id": "Senioren",
+      "skills": [
+        { "id": "mechanics", "name": "Basisbeweging", "description": "Een consistente slag- en werpbeweging onderhouden.", "level": 5, "progression": "Onderhoudt en evalueert de basisbeweging passend bij ervaring en belastbaarheid." },
+        { "id": "contact", "name": "Balcontact", "description": "Gecontroleerd contact in uiteenlopende slagzones.", "level": 5, "progression": "Oefent contact en richting bij gevarieerde balplaatsing met een eigen aandachtspunt." },
+        { "id": "groundballs", "name": "Grondballen", "description": "Grondballen in beweging verwerken en doorspelen.", "level": 5, "progression": "Onderhoudt de verwerking van gevarieerde grondballen en kiest een passende vervolgactie." },
+        { "id": "flyballs", "name": "Hoge ballen", "description": "De bal lezen en doelgericht een route kiezen.", "level": 5, "progression": "Oefent lezen van de bal en routekeuze passend bij ervaring en spelpositie." },
+        { "id": "throwing", "name": "Gooien en overpakken", "description": "Een gecontroleerde transfer en gerichte worp combineren.", "level": 5, "progression": "Onderhoudt transfer, voetenwerk en een gerichte worp met aandacht voor belastbaarheid." },
+        { "id": "starts", "name": "Starten en honklopen", "description": "Een gecontroleerde start en passende looplijn.", "level": 5, "progression": "Oefent reactie en looplijn passend bij ervaring en fysieke mogelijkheden." },
+        { "id": "communication", "name": "Samen communiceren", "description": "Teamafspraken toepassen bij gezamenlijke veldacties.", "level": 5, "progression": "Communiceert tijdig en evalueert samen de afgesproken verantwoordelijkheden." }
+      ],
+      "goals": [
+        { "text": "Spelers onderhouden hun basisbeweging en oefenen gecontroleerd balcontact met persoonlijke aandachtspunten.", "skill_ids": ["mechanics", "contact"] },
+        { "text": "Spelers onderhouden het verwerken en gericht doorspelen van gevarieerde grondballen.", "skill_ids": ["groundballs", "throwing"] },
+        { "text": "Spelers oefenen routekeuze bij hoge ballen en evalueren teamcommunicatie.", "skill_ids": ["flyballs", "communication"] },
+        { "text": "Spelers oefenen starts en looplijnen passend bij hun ervaring en fysieke mogelijkheden.", "skill_ids": ["starts"] }
+      ]
+    }
+  ]
+}

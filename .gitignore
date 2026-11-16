@@ -27,5 +27,6 @@ Thumbs.db
 .vscode/
 .github/agents/
 infra/
-data/nl/
+data/nl/*
+!data/nl/curriculum-voorstel.json
 /app/package-lock.json

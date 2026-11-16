@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { api } from '$lib/api';
   import type { AgeGroup, CurriculumGoal, CurriculumSkill } from '$lib/api/types';
+  import voorstel from '../../../../data/nl/curriculum-voorstel.json';
 
   let age: AgeGroup = 'U12';
   let version = 0;
@@ -32,16 +33,24 @@
   }
   function addSkill() { skills = [...skills, { id: '', name: '', description: '', level: 1, progression: '' }]; }
   function addGoal() { goals = [...goals, { text: '', skill_ids: [] }]; }
+  function loadProposal() {
+    const groep = voorstel.leeftijdsgroepen.find(item => item.age_group_id === age);
+    if (!groep) { notice = 'Er is geen clubvoorstel voor deze leeftijdscategorie.'; return; }
+    skills = groep.skills.map(skill => ({ ...skill }));
+    goals = groep.goals.map(goal => ({ text: goal.text, skill_ids: [...goal.skill_ids] }));
+    notice = 'Clubvoorstel geladen als concept; er is nog niets opgeslagen. Controleer de inhoud en kies "Stel leerlijn vast".';
+  }
   onMount(() => { void load(); });
 </script>
 
 <section class="card">
   <h2>Clubdoelen en vaardighedenleerlijn</h2>
-  <p>Stel per leeftijdscategorie clubdoelen en vaardigheden vast. Gebruik voor vaardigheids-ID's de tags uit de oefencatalogus; gelijke ID's verbinden leeftijdscategorieën. Elke wijziging maakt een nieuwe versie.</p>
+  <p>Stel per leeftijdscategorie clubdoelen en vaardigheden vast. Gebruik voor vaardigheids-ID's de tags uit de oefencatalogus; gelijke ID's verbinden leeftijdscategorieën. Elke wijziging maakt een nieuwe versie. <strong>Laad clubvoorstel</strong> vult de editor met het clubvoorstel voor de gekozen categorie; er wordt pas iets opgeslagen bij <strong>Stel leerlijn vast</strong>.</p>
   <label>Leeftijdscategorie<select bind:value={age} disabled={busy} onchange={load}>{#each ['Beeball', 'U12', 'U15', 'U21', 'Senioren'] as category}<option value={category}>{category}</option>{/each}</select></label>
   {#if busy}<p>Bezig...</p>{/if}
   {#if loaded}
     <p>{version ? `Huidige versie ${version}` : 'Nog geen leerlijn vastgesteld.'}</p>
+    <button class="btn secondary" disabled={busy} onclick={loadProposal}>Laad clubvoorstel</button>
     <h3>Vaardigheden</h3>
     {#each skills as skill, i}
       <div class="form-grid">

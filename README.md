@@ -16,7 +16,7 @@ Een Nederlandstalige progressive web app voor honkbaltrainers en technische comm
 - Microsoft-aanmelding. Trainers mogen teamgegevens lezen; wijzigingen zijn beperkt tot toegewezen teams. TC-leden beheren teams, trainerkoppelingen en clubdoelen.
 - Lokale browseropslag voor persoonlijke apparaatinstellingen en warming-upchecklists. Geauthenticeerde API-antwoorden worden niet offline gecachet.
 
-De TC bepaalt de inhoud van de leerlijn zelf. Vaardigheids-ID's moeten overeenkomen met de tags in de oefencatalogus om oefeningen voor een programma te kunnen selecteren. Leeftijdsovergangen worden niet automatisch bepaald. Het leeftijdsfilter van de catalogus is nog informatief.
+De TC bepaalt de inhoud van de leerlijn zelf. Vaardigheids-ID's moeten overeenkomen met de tags in de oefencatalogus om oefeningen voor een programma te kunnen selecteren. Bij een leeftijdsovergang tussen seizoenen toont Beheer een controlerapport van basisvaardigheden die opnieuw aangeboden horen te worden; de overgang zelf wordt niet automatisch uitgevoerd. Het leeftijdsfilter van de catalogus is nog informatief.
 
 ### Ontwikkelleerlijn
 
@@ -37,8 +37,11 @@ bestaande seizoenssamenstellingen. Met de aangeleverde banden valt Beeball
 onder 6 jaar buiten de 6–8-band; 16+ wordt bij U21 en senioren gebruikt. Er is
 geen individuele spelersregistratie.
 
-De ontwikkeldoelen worden nog niet gekoppeld aan oefeningen of gebruikt voor
-trainingsgeneratie: de vaardigheids-ID's verschillen van de catalogustags.
+Actieve ontwikkeldoelen van het teamseizoen sturen de trainingsgenerator op
+categorieniveau: oefeningen in de categorieën van die doelen krijgen voorrang
+op basis van de ingestelde prioriteit. De bestaande leerlijn blijft bepalen
+welke oefeningen in aanmerking komen, zodat een programma altijd gevuld kan
+worden als dat zonder sturing ook kon.
 Conceptdoelen en streefwaarden zijn voorstellen, geen gevalideerde normen.
 Controleer de inhoud vóór gebruik en sla geen persoonsgegevens van
 jeugdspelers op in notities.
@@ -106,7 +109,7 @@ De import gebruikt Azure-identiteit, niet een accountkey, en overschrijft bij he
 
 ## Status en privacy
 
-De implementatie is lokaal getest, maar echte aanmelding, database-integratie en productiehosting zijn nog niet end-to-end geverifieerd. De catalogus en clubdoelen moeten vóór gebruik worden ingericht. Gebruik geen persoonsgegevens van jeugdspelers. De `.gitignore` sluit lokale configuratie, secrets, sessiedata, de catalogus en omgevingsspecifieke infrastructuur uit; controleer wijzigingen altijd vóór publicatie.
+De implementatie is lokaal getest, maar echte aanmelding, database-integratie en productiehosting zijn nog niet end-to-end geverifieerd. De catalogus en clubdoelen moeten vóór gebruik worden ingericht. Gebruik geen persoonsgegevens van jeugdspelers. De `.gitignore` sluit lokale configuratie, secrets, sessiedata, de catalogus (behalve het curriculum-voorstel, dat met de app meegebundeld wordt) en omgevingsspecifieke infrastructuur uit; controleer wijzigingen altijd vóór publicatie.
 
 ## Licentie
 

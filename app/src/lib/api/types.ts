@@ -31,6 +31,15 @@ export interface DevelopmentAssignments {
   teamId: string; seasonId: string; version: number; modelVersion: number;
   assignments: DevelopmentAssignment[]; savedAt: string; savedBy: string;
 }
+export interface TransitionSkillReport {
+  id: string; name: string; category: string;
+  previousLevel: string; nextLevel: string; nextGoal: string; covered: boolean;
+}
+export interface TransitionCheck {
+  transition: { from: AgeGroup; to: AgeGroup } | null;
+  modelVersion: number | null;
+  skills: TransitionSkillReport[];
+}
 export interface ApiClient {
   health(): Promise<{ status: string; services: string[] }>;
   getCatalog(): Promise<Catalog>;
@@ -63,4 +72,5 @@ export interface ApiClient {
   saveDevelopment(expectedVersion: number, model: DevelopmentModel): Promise<DevelopmentVersion>;
   getDevelopmentAssignments(teamId: string, seasonId: string): Promise<DevelopmentAssignments | null>;
   saveDevelopmentAssignments(teamId: string, seasonId: string, input: SaveDevelopmentAssignments): Promise<DevelopmentAssignments>;
+  getTransitionCheck(teamId: string, seasonId: string): Promise<TransitionCheck>;
 }

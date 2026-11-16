@@ -6,10 +6,14 @@ import type { ISkillService } from './interfaces/ISkillService.js';
 import { NotFoundError, ValidationError } from '../errors/errorTypes.js';
 import { AppError } from '../errors/AppError.js';
 import { TEAM, clean, find, record, batchRecord, type BatchRepository } from './data.js';
+import { DevelopmentSteeringService } from './developmentSteering.js';
 
 const days: Record<string, number> = { zondag: 0, sunday: 0, maandag: 1, monday: 1, dinsdag: 2, tuesday: 2, woensdag: 3, wednesday: 3, donderdag: 4, thursday: 4, vrijdag: 5, friday: 5, zaterdag: 6, saturday: 6 };
 export class ProgramService implements IProgramService {
-  constructor(private readonly repo: BatchRepository, private readonly catalog: ICatalogService, private readonly skills: ISkillService) {}
+  private readonly steering: DevelopmentSteeringService;
+  constructor(private readonly repo: BatchRepository, private readonly catalog: ICatalogService, private readonly skills: ISkillService, steering?: DevelopmentSteeringService) {
+    this.steering = steering ?? new DevelopmentSteeringService(repo);
+  }
   async createProgram(teamId: string, settings: ProgramSettings) {
     const team = await this.repo.getById<Team>(TEAM, teamId, teamId);
     if (!team) throw new NotFoundError('Team', teamId);
@@ -29,7 +33,17 @@ export class ProgramService implements IProgramService {
       (!/field|veld/i.test(d.space_required) || settings.field) &&
       (!/cage|kooi/i.test(d.space_required) || settings.cage) &&
       (!/mound/i.test(d.space_required) || settings.mound));
-    const program: Program = { id: randomUUID(), team_id: teamId, settings, created_at: new Date().toISOString() };
+    // Priority-weighted steering by season development goals; the leerlijn pool stays the safety net.
+    const steering = await this.steering.steeringForProgram(teamId, settings.startDate);
+    const rank = (category: string) => steering?.priorities.get(category) ?? Number.POSITIVE_INFINITY;
+    const ordered = steering ? [...eligible].sort((a, b) => rank(a.category) - rank(b.category)) : eligible;
+    const program: Program = {
+      id: randomUUID(), team_id: teamId, settings, created_at: new Date().toISOString(),
+      ...(steering ? { development: {
+        season_id: steering.seasonId, model_version: steering.modelVersion, assignments_version: steering.assignmentsVersion,
+        categories: [...steering.priorities.entries()].sort((a, b) => a[1] - b[1]).map(([category]) => category),
+      } } : {}),
+    };
     const start = new Date(`${settings.startDate}T00:00:00Z`);
     start.setUTCDate(start.getUTCDate() + (day - start.getUTCDay() + 7) % 7);
     const lastUsed = new Map<string, number>();
@@ -41,7 +55,7 @@ export class ProgramService implements IProgramService {
       const format = (n: number) => `${String(Math.floor((n % 1440) / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`;
       const warmupMinutes = Math.min(catalog.warmup.duration_minutes, remaining);
       if (warmupMinutes > 0) { blocks.push({ id: randomUUID(), time: format(minutes), title: 'Warming-up', minutes: warmupMinutes, detail: catalog.warmup.blocks.map(b => b.name).join(' · ') }); minutes += warmupMinutes; remaining -= warmupMinutes; }
-      const candidates = eligible.filter(d => index * 7 - (lastUsed.get(d.id) ?? -Infinity) >= d.selection.minimum_repeat_gap_days);
+      const candidates = ordered.filter(d => index * 7 - (lastUsed.get(d.id) ?? -Infinity) >= d.selection.minimum_repeat_gap_days);
       for (const d of candidates) {
         const duration = Math.min(d.duration_minutes.default, remaining);
         if (duration < d.duration_minutes.minimum) continue;

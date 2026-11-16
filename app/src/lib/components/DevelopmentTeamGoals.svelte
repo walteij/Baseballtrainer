@@ -2,26 +2,33 @@
   import { onMount } from 'svelte';
   import { developmentBandsForCategory } from '../../../../shared/types/developmentAgeGroups.js';
   import { api } from '$lib/api';
-  import type { AgeGroup, DevelopmentAssignment, DevelopmentModel, DevelopmentVersion } from '$lib/api/types';
+  import type { AgeGroup, DevelopmentAssignment, DevelopmentModel, DevelopmentVersion, TransitionCheck } from '$lib/api/types';
 
   export let teamId: string;
   export let seasonId: string;
   export let ageGroup: AgeGroup;
 
+  const levelLabels: Record<string, string> = {
+    awareness: 'kennismaken', introduction: 'introduceren', foundation: 'basis leggen',
+    developing: 'ontwikkelen', proficient: 'beheersen', advanced: 'verdiepen',
+  };
   let version = 0;
   let model: DevelopmentVersion | null = null;
   let latest: DevelopmentVersion | null = null;
   let assignments: DevelopmentAssignment[] = [];
+  let transitionCheck: TransitionCheck | null = null;
   let loaded = false;
   let busy = false;
   let notice = '';
   $: bands = model ? developmentBandsForCategory(ageGroup, model.model.ageGroups) : [];
+  $: uncovered = transitionCheck?.skills.filter(skill => !skill.covered) ?? [];
 
   async function load() {
     busy = true; notice = '';
     try {
-      const [current, newest] = await Promise.all([
+      const [current, newest, check] = await Promise.all([
         api.getDevelopmentAssignments(teamId, seasonId), api.getDevelopment(),
+        api.getTransitionCheck(teamId, seasonId),
       ]);
       const pinned = current ? await api.getDevelopment(current.modelVersion) : newest;
       if (current && !pinned) throw new Error('De opgeslagen versie van de ontwikkelleerlijn ontbreekt.');
@@ -29,6 +36,7 @@
       assignments = current?.assignments ?? [];
       model = pinned;
       latest = newest;
+      transitionCheck = check;
       loaded = true;
     } catch (error) { notice = error instanceof Error ? error.message : 'Doelen laden mislukt.'; }
     finally { busy = false; }
@@ -80,6 +88,7 @@
       const saved = await api.saveDevelopmentAssignments(teamId, seasonId, { expectedVersion: version, modelVersion: model.version, assignments });
       version = saved.version;
       assignments = saved.assignments;
+      transitionCheck = await api.getTransitionCheck(teamId, seasonId);
       notice = 'Ontwikkeldoelen voor dit teamseizoen opgeslagen.';
     } catch (error) { notice = error instanceof Error ? error.message : 'Opslaan mislukt.'; }
     finally { busy = false; }
@@ -89,9 +98,40 @@
 
 <section class="card">
   <h2>Ontwikkeldoelen voor dit teamseizoen</h2>
-  <p>Conceptdoelen zijn voorstellen. Kies wat bij dit team past; afwijkingen veranderen de centrale leerlijn niet. Oefeningen worden nog niet automatisch gekoppeld.</p>
+  <p>Conceptdoelen zijn voorstellen. Kies wat bij dit team past; afwijkingen veranderen de centrale leerlijn niet. Actieve doelen sturen de trainingsgenerator: oefeningen in de bijbehorende categorieën krijgen voorrang op basis van de ingestelde prioriteit.</p>
   <p>Leeftijdsbanden worden op overlap getoond, ook bij grensleeftijden. Controleer of de beschikbare banden alle spelers van je team voldoende dekken.</p>
   {#if busy}<p>Bezig...</p>{/if}
+  {#if loaded && transitionCheck?.transition}
+    <section aria-label="Leeftijdsovergang">
+      <h3>Leeftijdsovergang {transitionCheck.transition.from} → {transitionCheck.transition.to}</h3>
+      {#if transitionCheck.modelVersion === null}
+        <p>Er is nog geen ontwikkelleerlijn beschikbaar om de overgang te controleren.</p>
+      {:else if transitionCheck.skills.length === 0}
+        <p>De leerlijn bevat geen vaardigheden die in beide leeftijdscategorieën voorkomen.</p>
+      {:else}
+        <p>
+          Deze basisvaardigheden uit {transitionCheck.transition.from} horen in {transitionCheck.transition.to} opnieuw aangeboden en verder ontwikkeld te worden
+          (leerlijnversie {transitionCheck.modelVersion}).
+          {#if uncovered.length}Nog niet gedekt door actieve seizoensdoelen: {uncovered.length} van {transitionCheck.skills.length}.{:else}Alle vaardigheden zijn gedekt door actieve seizoensdoelen.{/if}
+        </p>
+        <table>
+          <thead><tr><th>Vaardigheid</th><th>Was</th><th>Wordt</th><th>Volgende stap</th><th>Gedekt</th></tr></thead>
+          <tbody>
+            {#each transitionCheck.skills as skill (skill.id)}
+              <tr>
+                <td>{skill.name} <small>({skill.category})</small></td>
+                <td>{levelLabels[skill.previousLevel] ?? skill.previousLevel}</td>
+                <td>{levelLabels[skill.nextLevel] ?? skill.nextLevel}</td>
+                <td>{skill.nextGoal}</td>
+                <td>{skill.covered ? '✓ gedekt' : '⚠ niet gedekt'}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+        <p>De dekking wordt opnieuw berekend nadat je ontwikkeldoelen hebt opgeslagen.</p>
+      {/if}
+    </section>
+  {/if}
   {#if loaded}
     {#if !model}
       <p>Er is nog geen ontwikkelleerlijn beschikbaar. Een TC-lid kan deze laden bij beheer.</p>

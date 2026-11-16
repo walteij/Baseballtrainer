@@ -36,9 +36,11 @@ Staan er al trainingen? Gebruik die eerst. **Genereer niet opnieuw om een bestaa
 
 Een uitnodiging, toegang tot de app en een teamkoppeling zijn verschillende zaken. Kun je niet aanmelden? Vraag de TC of Microsoft-beheerder om je account en approl te controleren. Kun je wel lezen maar niet opslaan? Laat je teamkoppeling controleren.
 
+Je aanmelding blijft op dit apparaat bewaard, ook na het sluiten van de browser, totdat je je afmeldt of Microsoft om een nieuwe aanmelding vraagt. Gebruik **Afmelden** op gedeelde apparaten.
+
 ### Team wisselen
 
-Kies bovenaan bij **Actief team** het bedoelde team. Controleer dit vóór elke wijziging of export.
+Kies bovenaan bij **Actief team** het bedoelde team. Controleer dit vóór elke wijziging of export. De lijst staat op leeftijdscategorie (Beeball, U12, U15, U21, Senioren) en daarbinnen alfabetisch; Beeball Rookies staat vóór Beeball Majors.
 
 De app onthoudt het laatst gekozen team in je browser. Je kunt ook andere teams zien: zichtbaarheid betekent niet dat je die mag wijzigen. Trainers mogen wijzigingen alleen voor toegewezen teams opslaan.
 
@@ -132,11 +134,11 @@ De generator gebruikt:
 - Overeenkomende tags bij oefeningen.
 - Benodigd materiaal, indoor-geschiktheid en opgegeven faciliteiten.
 - De minimumtermijn voordat een oefening binnen dat nieuwe programma mag terugkomen.
+- De actieve ontwikkeldoelen van het bijbehorende teamseizoen: oefeningen in de categorieën van die doelen krijgen voorrang, op volgorde van prioriteit.
 
 Hij gebruikt niet automatisch:
 
 - De teksten van gekozen generieke of teamspecifieke seizoensdoelen.
-- Het nieuwe ontwikkelmodel, goedgekeurde ontwikkeldoelen of teamprioriteiten.
 - Het ervaringsniveau van je spelers of het niveauveld van de leerlijn als moeilijkheidsfilter.
 - De werkelijke plafondhoogte, ook niet bij de keuze **zaal — laag plafond**.
 - Vakanties, feestdagen, wedstrijden of automatische fasewisselingen.
@@ -226,9 +228,9 @@ Conceptdoelen (`draft`) zijn voorstellen, goedgekeurde doelen (`approved`) zijn 
 
 Bestaande teamkeuzes houden hun leerlijnversie. Stem een overstap via **Kies nieuwere leerlijnversie …** af met de TC en sla die bewust op.
 
-De leeftijdsbanden kunnen teamcategorieën overlappen; controleer de inhoud voor je hele groep. Er is geen individuele spelersregistratie en geen automatische controle van leerdoelen bij de overstap van U12 naar U15.
+De leeftijdsbanden kunnen teamcategorieën overlappen; controleer de inhoud voor je hele groep. Er is geen individuele spelersregistratie. Heeft het seizoen een andere leeftijdscategorie dan het vorige seizoen, dan toont dit scherm het rapport **Leeftijdsovergang** met de basisvaardigheden die terugkomen en of je actieve doelen ze dekken.
 
-**Deze teamdoelen sturen de generator nog niet automatisch aan.**
+**Actieve teamdoelen sturen de generator op categorieniveau: oefeningen in die categorieën krijgen voorrang op basis van prioriteit. Welke oefeningen in aanmerking komen, bepaalt de bestaande leerlijn.**
 
 ## 11. Praktijkvoorbeeld: HB3 en U15 voorbereiden
 

@@ -10,6 +10,7 @@ import { TeamAccessService } from './teamAccess.js';
 import { CurriculumService } from './curriculum.js';
 import { DevelopmentService } from './development.js';
 import { DevelopmentAssignmentService } from './developmentAssignments.js';
+import { DevelopmentSteeringService } from './developmentSteering.js';
 import type { ICatalogService } from './interfaces/ICatalogService.js';
 import type { IGoalsService } from './interfaces/IGoalsService.js';
 import type { IProgramService } from './interfaces/IProgramService.js';
@@ -26,6 +27,7 @@ export interface Services {
   curriculum: Pick<CurriculumService, 'get' | 'save'>;
   development: Pick<DevelopmentService, 'get' | 'save'>;
   developmentAssignments: Pick<DevelopmentAssignmentService, 'get' | 'save'>;
+  developmentSteering: Pick<DevelopmentSteeringService, 'transitionCheck'>;
   cosmos: { healthCheck(): Promise<boolean> };
   hostStorage: { healthCheck(): Promise<boolean> };
 }
@@ -60,8 +62,9 @@ export function getServices(): Services {
     const repo = new CosmosRepository(provider, config.cosmosDatabase);
     const catalog = new CatalogService(repo);
     const skills = new SkillService(repo);
+    const steering = new DevelopmentSteeringService(repo);
     const hostStorage = createHostStorageCheck(config);
-    services = { catalog, skills, cosmos: repo, hostStorage, teams: new TeamService(repo), goals: new GoalsService(repo), programs: new ProgramService(repo, catalog, skills), teamAccess: new TeamAccessService(repo), curriculum: new CurriculumService(repo), development: new DevelopmentService(repo), developmentAssignments: new DevelopmentAssignmentService(repo) };
+    services = { catalog, skills, cosmos: repo, hostStorage, teams: new TeamService(repo), goals: new GoalsService(repo), programs: new ProgramService(repo, catalog, skills, steering), teamAccess: new TeamAccessService(repo), curriculum: new CurriculumService(repo), development: new DevelopmentService(repo), developmentAssignments: new DevelopmentAssignmentService(repo), developmentSteering: steering };
   }
   return services;
 }

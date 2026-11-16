@@ -22,7 +22,8 @@ export async function initializeAuth(): Promise<boolean> {
   const { tenant, clientId } = config();
   client = new PublicClientApplication({
     auth: { clientId, authority: `https://login.microsoftonline.com/${tenant}`, redirectUri: window.location.origin + '/' },
-    cache: { cacheLocation: BrowserCacheLocation.SessionStorage },
+    // LocalStorage keeps the signed-in account across browser restarts; tokens renew silently.
+    cache: { cacheLocation: BrowserCacheLocation.LocalStorage },
   });
   await client.initialize();
   const result = await client.handleRedirectPromise();

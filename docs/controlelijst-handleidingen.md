@@ -47,9 +47,9 @@ De handleidingen gebruiken placeholders in plaats van onbeoordeelde schermafbeel
 
 ## 3. Bekende beperkingen voor gebruikers
 
-- Het nieuwe ontwikkelmodel en gekozen teamdoelen sturen de generator nog niet automatisch aan.
-- De generator gebruikt de actuele bestaande leerlijn van de teamcategorie, niet automatisch de modelversie van ontwikkelkeuzes.
-- Er is geen individuele spelersregistratie of automatische bewaking van aangeboden/behaalde overgangsvaardigheden.
+- Actieve ontwikkeldoelen sturen de generator op categorieniveau met prioriteitsvoorkeur; welke oefeningen in aanmerking komen, bepaalt nog steeds de bestaande leerlijn van de teamcategorie.
+- De generator gebruikt voor die sturing de opgeslagen modelversie van de ontwikkelkeuzes van het seizoen dat bij het startjaar hoort.
+- Bij een leeftijdsovergang toont Beheer een rapport van basisvaardigheden die terugkomen in de nieuwe categorie en of actieve seizoensdoelen ze dekken; er is geen individuele spelersregistratie of automatische bewaking van behaalde vaardigheden.
 - Goedkeuren van een doel is niet hetzelfde als behalen door spelers of het aanbieden in een training.
 - Geen automatisch ervaringsniveau-, werkelijke plafondhoogte-, vakantie- of fasewisselfilter.
 - Herhaaltermijnen worden binnen het nieuw gegenereerde programma bijgehouden, niet over eerdere programma's heen.

@@ -129,11 +129,20 @@ export interface ProgramSettings {
   mound: boolean;
 }
 
+export interface ProgramDevelopmentSteering {
+  season_id: string;
+  model_version: number;
+  assignments_version: number;
+  /** Drill catalog categories preferred by the season's development goals, best priority first. */
+  categories: string[];
+}
+
 export interface Program {
   id: string;
   team_id: string;
   settings: ProgramSettings;
   created_at: string;
+  development?: ProgramDevelopmentSteering;
 }
 
 export interface SessionBlock {

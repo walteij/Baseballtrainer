@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   saveDevelopment: vi.fn(),
   getDevelopmentAssignments: vi.fn(),
   saveDevelopmentAssignments: vi.fn(),
+  getTransitionCheck: vi.fn(),
 }));
 vi.mock('$lib/api', () => ({ api: mocks }));
 import DevelopmentEditor from '../src/lib/components/DevelopmentEditor.svelte';
@@ -20,6 +21,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.getDevelopment.mockResolvedValue(version());
   mocks.getDevelopmentAssignments.mockResolvedValue(null);
+  mocks.getTransitionCheck.mockResolvedValue({ transition: null, modelVersion: null, skills: [] });
 });
 afterEach(cleanup);
 
@@ -115,5 +117,22 @@ describe('development goals UI', () => {
     await fireEvent.click(screen.getByText('Kies nieuwere leerlijnversie 2'));
     await screen.findByText('Leerlijnversie 2 · teamkeuzeversie 4.');
     expect(mocks.saveDevelopmentAssignments).not.toHaveBeenCalled();
+  });
+
+  it('shows the age-transition report with uncovered carry-over skills', async () => {
+    mocks.getTransitionCheck.mockResolvedValue({
+      transition: { from: 'U12', to: 'U15' }, modelVersion: 1,
+      skills: [
+        { id: 'hit_fixture', name: 'Vaardigheid', category: 'hitting', previousLevel: 'foundation', nextLevel: 'developing', nextGoal: 'Volgende stap', covered: true },
+        { id: 'pitch_fixture', name: 'Werpen', category: 'pitching', previousLevel: 'introduction', nextLevel: 'foundation', nextGoal: 'Volgende stap', covered: false },
+      ],
+    });
+    render(DevelopmentTeamGoals, { teamId, seasonId, ageGroup: 'U15' });
+    await screen.findByRole('heading', { name: 'Leeftijdsovergang U12 → U15' });
+    expect(screen.getByText(/Nog niet gedekt door actieve seizoensdoelen: 1 van 2\./)).toBeTruthy();
+    const rows = screen.getAllByRole('row').slice(1);
+    expect(rows[0].textContent).toContain('✓ gedekt');
+    expect(rows[1].textContent).toContain('⚠ niet gedekt');
+    expect(rows[1].textContent).toContain('basis leggen');
   });
 });

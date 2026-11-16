@@ -125,23 +125,24 @@ In **Beheer > Skills** staan verschillende onderdelen naast elkaar.
 |---|---|---|
 | **Clubdoelen en vaardighedenleerlijn** | Bestaande leerlijn per teamleeftijdscategorie | De generator gebruikt de vaardigheids-ID's uit de actuele leerlijn, gekoppeld aan catalogustags |
 | **Doelen samenstellen** | Generieke en eigen doelen voor een teamseizoen bewaren | De geselecteerde doelteksten sturen de oefeningenselectie niet |
-| **Ontwikkelleerlijn voor de club** | Nieuw ontwikkelmodel met leeftijdsbanden, vaardigheidsdoelen, clubdoelen en criteria | Nog geen automatische invloed |
-| **Ontwikkeldoelen voor dit teamseizoen** | Keuzes en afwijkingen van het nieuwe model voor een teamseizoen | Nog geen automatische invloed |
+| **Ontwikkelleerlijn voor de club** | Nieuw ontwikkelmodel met leeftijdsbanden, vaardigheidsdoelen, clubdoelen en criteria | Alleen via actieve teamkeuzes (zie hieronder); het model zelf selecteert geen oefeningen |
+| **Ontwikkeldoelen voor dit teamseizoen** | Keuzes en afwijkingen van het nieuwe model voor een teamseizoen | Actieve doelen geven oefeningen in hun categorieën voorrang, op volgorde van prioriteit |
 
-Het vaststellen of goedkeuren van een nieuw ontwikkeldoel maakt dat doel dus niet automatisch onderdeel van een training.
+Het vaststellen of goedkeuren van een nieuw ontwikkeldoel maakt dat doel dus niet automatisch onderdeel van een training: alleen actieve teamkeuzes sturen de volgorde, en de bestaande leerlijn bepaalt welke oefeningen in aanmerking komen.
 
 ## 6. Bestaande clubdoelen en vaardighedenleerlijn vaststellen
 
 1. Open **Beheer > Skills**.
 2. Zoek **Clubdoelen en vaardighedenleerlijn**.
 3. Kies **Leeftijdscategorie**.
-4. Controleer of bewerk de vaardigheden:
+4. Kies desgewenst **Laad clubvoorstel** om de editor te vullen met het clubvoorstel voor die categorie (onder andere een uitgewerkte U15-leerlijn). Laden slaat nog niets op en vervangt de huidige editorinhoud.
+5. Controleer of bewerk de vaardigheden:
    - **Vaardigheids-ID**: gebruik een bestaande skilltag uit de oefencatalogus.
    - **Naam**, **Omschrijving**, **Niveau (1–10)** en **Doel voor deze leeftijd**.
-5. Gebruik zo nodig **Vaardigheid toevoegen** of **Verwijder vaardigheid**.
-6. Bewerk bij **Leeftijdsdoelen** de tekst en bijbehorende **Vaardigheids-ID's (komma-gescheiden)**. Gebruik **Doel toevoegen** of **Verwijder doel** waar nodig.
-7. Kies **Stel leerlijn vast**.
-8. Controleer de melding met het nieuwe versienummer.
+6. Gebruik zo nodig **Vaardigheid toevoegen** of **Verwijder vaardigheid**.
+7. Bewerk bij **Leeftijdsdoelen** de tekst en bijbehorende **Vaardigheids-ID's (komma-gescheiden)**. Gebruik **Doel toevoegen** of **Verwijder doel** waar nodig.
+8. Kies **Stel leerlijn vast**.
+9. Controleer de melding met het nieuwe versienummer.
 
 Er moeten doelen en vaardigheden aanwezig zijn om te kunnen vaststellen. Elke opslag maakt een nieuwe versie; bestaande seizoensdoelen blijven ongewijzigd.
 
@@ -212,6 +213,12 @@ Er moeten generieke doelen voor de leeftijdscategorie beschikbaar zijn. Bestaand
 
 Deze afwijkingen veranderen de centrale leerlijn niet. Een streefpercentage is een planningsafspraak, geen automatisch berekende spelersbeoordeling.
 
+Actieve doelen sturen de trainingsgenerator: oefeningen in de categorieën van die doelen krijgen voorrang, waarbij prioriteit 1 het zwaarst weegt. De bestaande leerlijn blijft bepalen welke oefeningen in aanmerking komen.
+
+### Leeftijdsovergang controleren
+
+Heeft het gekozen seizoen een andere leeftijdscategorie dan het vorige seizoen van het team, dan toont **Ontwikkeldoelen voor dit teamseizoen** bovenaan het rapport **Leeftijdsovergang**. Het rapport somt de basisvaardigheden uit de leerlijn op die in beide categorieën voorkomen, met het oude en nieuwe beheersingsniveau en de volgende stap. Per vaardigheid staat of een actief seizoensdoel haar dekt; niet-gedekte vaardigheden verdienen een extra doelkeuze. De dekking wordt opnieuw berekend na het opslaan van ontwikkeldoelen. Het rapport controleert het aanbod, niet of spelers vaardigheden daadwerkelijk beheersen.
+
 Met **Verwijder teamkeuze** haal je alleen de teamkeuze weg. Een gearchiveerd doel kan niet actief worden opgeslagen.
 
 Is een nieuwere centrale versie beschikbaar? Kies desgewenst **Kies nieuwere leerlijnversie …**, controleer de keuzes en sla op. Bestaande teamkeuzes gaan niet vanzelf over. Bij niet-passende keuzes meldt de app dat je de huidige versie moet behouden of keuzes moet aanpassen.
@@ -229,7 +236,7 @@ Onderstaande doelteksten zijn voorbeelden, geen verplichte sportnormen.
 7. Laat de trainers bestaande trainingen in **Kalender** controleren en materiaal en ruimte nalopen.
 8. Laat alleen een nieuw programma maken als dat werkelijk nodig is.
 
-De wens om bij U12 naar U15 te kunnen aantonen dat bepaalde vaardigheden zijn aangeboden, is **nog geen automatische functie**. De huidige app registreert geen individuele spelersloopbaan en bewaakt niet automatisch of een overgangsdoel is aangeboden of behaald. De TC moet die afstemming voorlopig organisatorisch regelen.
+Bij de overgang van U12 naar U15 toont het rapport **Leeftijdsovergang** welke basisvaardigheden terugkomen en of actieve seizoensdoelen ze dekken. De app registreert echter geen individuele spelersloopbaan en bewaakt niet automatisch of een overgangsdoel daadwerkelijk is aangeboden of behaald. De TC moet die controle organisatorisch blijven regelen.
 
 ## 10. Veelgestelde vragen en problemen
 

@@ -19,7 +19,7 @@ die uitvoer ongewijzigd. De build controleert of HTML en JavaScript dezelfde
 SvelteKit-identificatie gebruiken; een gemengde build kan een wit scherm geven.
 Controleer voor publicatie ook het aanmelden-scherm in een browser, niet alleen HTTP 200.
 
-De frontend gebruikt Microsoft-aanmelding met MSAL en de live API-client. Stel vóór de build `VITE_ENTRA_TENANT_ID`, `VITE_ENTRA_PWA_CLIENT_ID`, `VITE_ENTRA_API_CLIENT_ID` en `VITE_API_BASE_URL` in. Het API-adres eindigt op `/api` en gebruikt HTTPS (localhost mag HTTP gebruiken). Registreer de exacte website-origin met afsluitende `/` als SPA-redirect in Entra. Deze waarden zijn geen secrets. Zonder configuratie of geldige aanmelding wordt geen voorbeelddata getoond. De API controleert rollen en teamtoewijzingen; UI-zichtbaarheid is geen beveiliging.
+De frontend gebruikt Microsoft-aanmelding met MSAL en de live API-client. Stel vóór de build `VITE_ENTRA_TENANT_ID`, `VITE_ENTRA_PWA_CLIENT_ID`, `VITE_ENTRA_API_CLIENT_ID` en `VITE_API_BASE_URL` in. Het API-adres eindigt op `/api` en gebruikt HTTPS (localhost mag HTTP gebruiken). Registreer de exacte website-origin met afsluitende `/` als SPA-redirect in Entra. Deze waarden zijn geen secrets. Zonder configuratie of geldige aanmelding wordt geen voorbeelddata getoond. De API controleert rollen en teamtoewijzingen; UI-zichtbaarheid is geen beveiliging. De aanmelding wordt in `localStorage` bewaard en blijft dus ook na het sluiten van de browser op het apparaat behouden totdat de gebruiker zich afmeldt of Entra opnieuw aanmelden vereist; gebruik **Afmelden** op gedeelde apparaten.
 
 De productiebuild stopt bij ontbrekende/ongeldige Entra-ID's of een ongeldig
 API-adres. Geef deze waarden mee in hetzelfde proces als de build of via een
@@ -76,7 +76,7 @@ naar `200.html` en serveert `.webmanifest` als `application/manifest+json`.
 Houd deze hostconfiguratie buiten `static/`, zodat de serviceworker haar niet
 probeert te cachen: Azure maakt het configuratiebestand niet publiek.
 
-Een TC-lid kan onder Beheer per leeftijdscategorie clubdoelen en vaardigheidsleerlijnen vaststellen. Elke wijziging maakt een nieuwe versie; bestaande seizoenssamenstellingen blijven op hun oude versie staan. De vaardigheids-ID moet overeenkomen met een catalogustag om oefeningen te selecteren. Leeftijdsovergangen worden niet automatisch bepaald; de TC legt de doelen per categorie vast.
+Een TC-lid kan onder Beheer per leeftijdscategorie clubdoelen en vaardigheidsleerlijnen vaststellen. **Laad clubvoorstel** vult de editor met het versiebeheerde clubvoorstel uit `data/nl/curriculum-voorstel.json` (gebundeld bij de build); vaststellen blijft een bewuste aparte stap. Elke wijziging maakt een nieuwe versie; bestaande seizoenssamenstellingen blijven op hun oude versie staan. De vaardigheids-ID moet overeenkomen met een catalogustag om oefeningen te selecteren. Bij een leeftijdsovergang tussen seizoenen toont het ontwikkeldoelenscherm een controlerapport; de TC legt de doelen per categorie zelf vast. De teamlijst is gesorteerd op leeftijdscategorie en daarbinnen alfabetisch, met Rookies vóór Majors bij gelijke naamprefix.
 
 Daarnaast kan de TC onder **Beheer > Skills > Ontwikkelleerlijn voor de club** een afzonderlijk
 ontwikkelmodel als JSON laden. Laden schrijft niets weg; **Bewaar nieuwe
@@ -90,8 +90,12 @@ De namen in het bronmodel veranderen hierdoor niet. Bij
 **Ontwikkeldoelen voor dit teamseizoen** kan de TC of toegewezen trainer
 doelen voor overlappende leeftijdsbanden kiezen en teamafwijkingen opslaan.
 Eerder opgeslagen keuzes houden hun versie; een nieuwere versie moet bewust
-worden gekozen en opgeslagen. Deze doelen beïnvloeden de bestaande
-oefeningenselectie nog niet.
+worden gekozen en opgeslagen. Actieve doelen sturen de trainingsgenerator op
+categorieniveau: oefeningen in die categorieën krijgen voorrang op basis van
+prioriteit, terwijl de bestaande leerlijn bepaalt welke oefeningen in
+aanmerking komen. Verschilt de leeftijdscategorie van het seizoen met die van
+het vorige seizoen, dan toont het scherm een leeftijdsovergangsrapport met de
+terugkerende basisvaardigheden en hun dekking door actieve doelen.
 
 Trainerbeheer onder **Beheer > Users** gebruikt Microsoft Graph met gedelegeerde rechten
 van de aangemelde Entra-beheerder: `User.Read.All`, `User.Invite.All`,
